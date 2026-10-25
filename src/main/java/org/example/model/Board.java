@@ -80,7 +80,7 @@ public class Board {
         return null;
     }
     public boolean moveVehicle(Vehicle vehicle, int steps) {
-        if (getVehicle(vehicle.getId()) == vehicle) {
+        if (getVehicle(vehicle.getId()) != vehicle) {
             return false;
         }
         if (steps == 0) return false;
@@ -90,13 +90,13 @@ public class Board {
         if (vehicle.getOrientation() == Orientation.vertical) {
             for (int i = 0; i < Math.abs(steps); i++) {
                 if (steps > 0) {
-                    Position position = new Position(row + length + i, column);
+                    Position position = new Position(row + length + steps, column);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
                 }
                 else {
-                    Position position = new Position(row + i, column);
+                    Position position = new Position(row + steps, column);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
@@ -109,13 +109,13 @@ public class Board {
         else {
             for (int i = 0; i < Math.abs(steps); i++) {
                 if (steps > 0) {
-                    Position position = new Position(row, column + length + i);
+                    Position position = new Position(row, column + length + steps);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
                 }
                 else {
-                    Position position = new Position(row, column - i);
+                    Position position = new Position(row, column + steps);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
@@ -127,4 +127,5 @@ public class Board {
 
         return true;
     }
+
 }

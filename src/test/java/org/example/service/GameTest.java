@@ -2,6 +2,7 @@ package org.example.service;
 
 import java.util.Scanner;
 import org.example.model.Board;
+import org.example.model.Exit;
 import org.example.model.Orientation;
 import org.example.model.Position;
 import org.example.model.Vehicle;
@@ -111,4 +112,19 @@ class GameTest {
             assertEquals(new Position(2, 1), board.getVehicle("A").getPosition(), command);
         }
     }
+    @Test
+    void shouldStopReadingCommandsWhenHeroWins() {
+        Board board = createBoard();
+        board.addExit(new Exit("A", 2, true));
+        Scanner input = new Scanner("move B 3\nmove A 5\nmove B -1\n");
+        Vehicle hero = board.getVehicle("A");
+
+        new Game(board, input).start();
+
+        assertSame(hero, board.getWinner());
+        assertNull(board.getVehicle("A"));
+        assertEquals(new Position(3, 4), board.getVehicle("B").getPosition());
+        assertEquals("move B -1", input.nextLine());
+    }
+
 }

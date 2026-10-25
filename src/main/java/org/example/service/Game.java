@@ -17,11 +17,11 @@ public class Game {
     }
 
     public void start() {
-        System.out.println("Rush Hour - movement demo");
+        System.out.println("Rush Hour - hero escape demo");
         showHelp();
         printer.print(board);
 
-        while (true) {
+        while (board.getWinner() == null) {
             System.out.print("> ");
             // End of input (for example Ctrl+D) also ends the program safely.
             if (!input.hasNextLine()) {
@@ -50,6 +50,9 @@ public class Game {
                 System.out.println("Unknown command. Type help.");
             }
         }
+        if (board.getWinner() != null) {
+            System.out.println("Hero " + board.getWinner().getId() + " wins!");
+        }
         System.out.println("Goodbye!");
     }
 
@@ -57,6 +60,7 @@ public class Game {
         System.out.println("Commands: show | move <id> <steps> | help | quit");
         System.out.println("Positive steps: right/down. Negative steps: left/up.");
         System.out.println("Example: move A 2. Vehicle IDs are case-sensitive.");
+        System.out.println("To win, move the entire hero out through its own exit in one move.");
     }
 
     private void handleMove(String[] parts) {

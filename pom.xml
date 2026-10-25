@@ -107,7 +107,7 @@
                 <version>3.5.0</version>
                 <configuration>
                     <configLocation>google_checks.xml</configLocation>
-                    <encoding>UTF-8</encoding>
+                    <inputEncoding>UTF-8</inputEncoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                 </configuration>

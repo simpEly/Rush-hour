@@ -96,7 +96,32 @@ public class Board {
         }
         return null;
     }
+    public List<Vehicle> getVehicles() {
+        return List.copyOf(vehicles);
+    }
+
     public boolean moveVehicle(Vehicle vehicle, int steps) {
+        if (!canMoveVehicle(vehicle, steps)) {
+            return false;
+        }
+        boolean vertical = vehicle.getOrientation() == Orientation.vertical;
+        int start = vertical ? vehicle.getPosition().getRow() : vehicle.getPosition().getColumn();
+        long destination = (long) start + steps;
+        int limit = vertical ? row : column;
+        if (destination < 0 || destination + vehicle.getLength() > limit) {
+            vehicles.remove(vehicle);
+            winner = vehicle;
+        } else {
+            Position current = vehicle.getPosition();
+            Position next = vertical
+                    ? new Position((int) destination, current.getColumn())
+                    : new Position(current.getRow(), (int) destination);
+            vehicle.setPosition(next);
+        }
+        return true;
+    }
+
+    public boolean canMoveVehicle(Vehicle vehicle, int steps) {
         if (winner != null || vehicle == null || getVehicle(vehicle.getId()) != vehicle) {
             return false;
         }
@@ -109,7 +134,7 @@ public class Board {
         long destination = (long) (vertical ? row : column) + steps;
         int limit = vertical ? this.row : this.column;
         if (destination < 0 || destination + length > limit) {
-            return tryExit(vehicle, steps, destination);
+            return canExit(vehicle, steps, destination);
         }
         if (vehicle.getOrientation() == Orientation.vertical) {
             for (int i = 0; i < Math.abs(steps); i++) {
@@ -126,8 +151,6 @@ public class Board {
                     }
                 }
             }
-            Position position = new Position(row + steps, column);
-            vehicle.setPosition(position);
 
         }
         else {
@@ -145,8 +168,6 @@ public class Board {
                     }
                 }
             }
-            Position position = new Position(row, column + steps);
-            vehicle.setPosition(position);
         }
 
         return true;
@@ -177,7 +198,7 @@ public class Board {
         return winner;
     }
 
-    private boolean tryExit(Vehicle vehicle, int steps, long destination) {
+    private boolean canExit(Vehicle vehicle, int steps, long destination) {
         if (!vehicle.isHero() || vehicle.getOrientation() != Orientation.horizontal) {
             return false;
         }
@@ -206,8 +227,6 @@ public class Board {
                 }
                 nextColumn += direction;
             }
-            vehicles.remove(vehicle);
-            winner = vehicle;
             return true;
         }
         return false;

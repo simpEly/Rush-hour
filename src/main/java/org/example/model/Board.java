@@ -71,4 +71,60 @@ public class Board {
         vehicles.add(vehicle);
         return true;
     }
+    public Vehicle getVehicle(String id) {
+        for (Vehicle car : vehicles) {
+            if (car.getId().equals(id)) {
+                return car;
+            }
+        }
+        return null;
+    }
+    public boolean moveVehicle(Vehicle vehicle, int steps) {
+        if (getVehicle(vehicle.getId()) == vehicle) {
+            return false;
+        }
+        if (steps == 0) return false;
+        int row =  vehicle.getPosition().getRow();
+        int column = vehicle.getPosition().getColumn();
+        int length = vehicle.getLength();
+        if (vehicle.getOrientation() == Orientation.vertical) {
+            for (int i = 0; i < Math.abs(steps); i++) {
+                if (steps > 0) {
+                    Position position = new Position(row + length + i, column);
+                    if (isOccupied(position) || !isInside(position)) {
+                        return false;
+                    }
+                }
+                else {
+                    Position position = new Position(row + i, column);
+                    if (isOccupied(position) || !isInside(position)) {
+                        return false;
+                    }
+                }
+            }
+            Position position = new Position(row + steps, column);
+            vehicle.setPosition(position);
+
+        }
+        else {
+            for (int i = 0; i < Math.abs(steps); i++) {
+                if (steps > 0) {
+                    Position position = new Position(row, column + length + i);
+                    if (isOccupied(position) || !isInside(position)) {
+                        return false;
+                    }
+                }
+                else {
+                    Position position = new Position(row, column - i);
+                    if (isOccupied(position) || !isInside(position)) {
+                        return false;
+                    }
+                }
+            }
+            Position position = new Position(row, column + steps);
+            vehicle.setPosition(position);
+        }
+
+        return true;
+    }
 }

@@ -29,5 +29,8 @@ public class Vehicle {
     public boolean isHero() {
         return Hero;
     }
+    public void setPosition(Position position) {
+        this.position = position;
+    }
 
 }

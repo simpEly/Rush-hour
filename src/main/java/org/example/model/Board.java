@@ -96,6 +96,13 @@ public class Board {
         int row =  vehicle.getPosition().getRow();
         int column = vehicle.getPosition().getColumn();
         int length = vehicle.getLength();
+        // Check the destination first, including very large input values.
+        boolean vertical = vehicle.getOrientation() == Orientation.vertical;
+        long destination = (long) (vertical ? row : column) + steps;
+        int limit = vertical ? this.row : this.column;
+        if (destination < 0 || destination + length > limit) {
+            return false;
+        }
         if (vehicle.getOrientation() == Orientation.vertical) {
             for (int i = 0; i < Math.abs(steps); i++) {
                 if (steps > 0) {

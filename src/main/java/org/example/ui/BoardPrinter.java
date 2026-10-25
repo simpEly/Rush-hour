@@ -1,6 +1,5 @@
 package org.example.ui;
 
-import java.io.PrintStream;
 import org.example.model.Board;
 import org.example.model.Position;
 import org.example.model.Vehicle;

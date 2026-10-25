@@ -59,6 +59,15 @@ public class Board {
         }
         return false;
     }
+    public Vehicle getVehicleAt(Position position) {
+        for (Vehicle vehicle : vehicles) {
+            if (getOccupiedPositions(vehicle).contains(position)) {
+                return vehicle;
+            }
+        }
+        return null;
+    }
+
     public boolean addVehicle(Vehicle vehicle) {
         if (!isVehicleInside(vehicle)) {
             return false;

@@ -90,13 +90,13 @@ public class Board {
         if (vehicle.getOrientation() == Orientation.vertical) {
             for (int i = 0; i < Math.abs(steps); i++) {
                 if (steps > 0) {
-                    Position position = new Position(row + length + steps, column);
+                    Position position = new Position(row + length + i, column);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
                 }
                 else {
-                    Position position = new Position(row + steps, column);
+                    Position position = new Position(row - i - 1, column);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
@@ -109,13 +109,13 @@ public class Board {
         else {
             for (int i = 0; i < Math.abs(steps); i++) {
                 if (steps > 0) {
-                    Position position = new Position(row, column + length + steps);
+                    Position position = new Position(row, column + length + i);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }
                 }
                 else {
-                    Position position = new Position(row, column + steps);
+                    Position position = new Position(row, column - i - 1);
                     if (isOccupied(position) || !isInside(position)) {
                         return false;
                     }

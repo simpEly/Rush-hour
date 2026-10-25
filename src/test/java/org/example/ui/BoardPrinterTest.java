@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class BoardPrinterTest {
     private String render(Board board) {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
-        new BoardPrinter().print(board, new PrintStream(output, true, StandardCharsets.UTF_8));
+        new BoardPrinter().print(board);
         return output.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 

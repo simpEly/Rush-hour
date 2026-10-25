@@ -106,7 +106,7 @@ public class Board {
                 }
                 else {
                     Position position = new Position(row - i - 1, column);
-                    if (isOccupied(position) || !isInside(position)) {
+                    if (isOccupied(position) || !isInside(position))    {
                         return false;
                     }
                 }

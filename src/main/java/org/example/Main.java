@@ -15,7 +15,7 @@ public class Main {
         board.addVehicle(new Vehicle(
                 "B", 3, Orientation.vertical, new Position(0, 4), false
         ));
-        new BoardPrinter().print(board, System.out);
+        new BoardPrinter().print(board);
     }
 }
 

@@ -15,9 +15,13 @@ public class Main {
                 "A", 2, Orientation.horizontal, new Position(2, 1), true
         ));
         board.addVehicle(new Vehicle(
-                "B", 3, Orientation.vertical, new Position(0, 4), false
+                "B", 2, Orientation.horizontal, new Position(4, 1), true
+        ));
+        board.addVehicle(new Vehicle(
+                "C", 3, Orientation.vertical, new Position(0, 4), false
         ));
         board.addExit(new Exit("A", 2, true));
+        board.addExit(new Exit("B", 4, false));
         Game game = new Game(board, new Scanner(System.in));
         game.start();
     }

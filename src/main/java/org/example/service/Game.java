@@ -6,6 +6,8 @@ import org.example.model.Vehicle;
 import org.example.ui.BoardPrinter;
 
 public class Game {
+    private final String humanHeroId = "A";
+    private final String computerHeroId = "B";
     private final Board board;
     private final Scanner input;
     private final BoardPrinter printer;
@@ -18,6 +20,9 @@ public class Game {
 
     public void start() {
         System.out.println("Rush Hour - hero escape demo");
+        System.out.println("Your hero: " + humanHeroId + " -> right exit");
+        System.out.println("Computer hero: " + computerHeroId + " -> left exit");
+        System.out.println("Movement demo: you can currently move every vehicle; AI is not active yet.");
         showHelp();
         printer.print(board);
 
@@ -51,7 +56,14 @@ public class Game {
             }
         }
         if (board.getWinner() != null) {
-            System.out.println("Hero " + board.getWinner().getId() + " wins!");
+            String winnerId = board.getWinner().getId();
+            if (winnerId.equals(humanHeroId)) {
+                System.out.println("You win! Hero " + winnerId + " escaped.");
+            } else if (winnerId.equals(computerHeroId)) {
+                System.out.println("Computer wins! Hero " + winnerId + " escaped.");
+            } else {
+                System.out.println("Hero " + winnerId + " wins!");
+            }
         }
         System.out.println("Goodbye!");
     }

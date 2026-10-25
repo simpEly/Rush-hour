@@ -127,4 +127,24 @@ class GameTest {
         assertEquals("move B -1", input.nextLine());
     }
 
+    @Test
+    void shouldAllowComputerHeroToWinThroughItsOwnExit() {
+        Board board = new Board(6, 6);
+        Vehicle humanHero = new Vehicle("A", 2, Orientation.horizontal, new Position(2, 1), true);
+        Vehicle computerHero = new Vehicle("B", 2, Orientation.horizontal, new Position(4, 1), true);
+        assertTrue(board.addVehicle(humanHero));
+        assertTrue(board.addVehicle(computerHero));
+        board.addExit(new Exit("A", 2, true));
+        board.addExit(new Exit("B", 4, false));
+        Scanner input = new Scanner("move B -3\nmove A 1\n");
+
+        new Game(board, input).start();
+
+        assertSame(computerHero, board.getWinner());
+        assertSame(humanHero, board.getVehicle("A"));
+        assertNull(board.getVehicle("B"));
+        assertEquals(new Position(2, 1), humanHero.getPosition());
+        assertEquals("move A 1", input.nextLine());
+    }
+
 }

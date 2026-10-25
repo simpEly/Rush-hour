@@ -139,4 +139,43 @@ public class BoardTest {
         assertTrue(board.isOccupied(new Position(2, 2)));
     }
 
+    @Test
+    void shouldRejectInvalidBoardDimensions() {
+        assertThrows(IllegalArgumentException.class, () -> new Board(0, 6));
+        assertThrows(IllegalArgumentException.class, () -> new Board(6, -1));
+    }
+
+    @Test
+    void shouldRejectDuplicateVehicleId() {
+        Board board = new Board(6, 6);
+        Vehicle first = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 0), false);
+        Vehicle duplicate = new Vehicle("A", 2, Orientation.horizontal, new Position(2, 0), false);
+
+        assertTrue(board.addVehicle(first));
+        assertFalse(board.addVehicle(duplicate));
+        assertSame(first, board.getVehicle("A"));
+        assertNull(board.getVehicleAt(new Position(2, 0)));
+    }
+
+    @Test
+    void shouldRejectNullVehicle() {
+        Board board = new Board(6, 6);
+        assertFalse(board.addVehicle(null));
+        assertFalse(board.moveVehicle(null, 1));
+    }
+
+    @Test
+    void shouldRejectOverlappingAndOutsideVehicles() {
+        Board board = new Board(6, 6);
+        Vehicle first = new Vehicle("A", 2, Orientation.horizontal, new Position(2, 1), false);
+        Vehicle overlap = new Vehicle("B", 2, Orientation.vertical, new Position(1, 2), false);
+        Vehicle outside = new Vehicle("C", 2, Orientation.horizontal, new Position(0, 5), false);
+
+        assertTrue(board.addVehicle(first));
+        assertFalse(board.addVehicle(overlap));
+        assertFalse(board.addVehicle(outside));
+        assertNull(board.getVehicle("B"));
+        assertNull(board.getVehicle("C"));
+    }
+
 }

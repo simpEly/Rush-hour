@@ -1,6 +1,6 @@
 package org.example.model;
 
-public class Position {
+public final class Position {
     private final int column;
     private final int row;
     public Position(int row, int column) {
@@ -20,5 +20,14 @@ public class Position {
         Position other = (Position) o;
         return  column == other.column &&
                 row == other.row;
+    }
+    @Override
+    public int hashCode() {
+        return 31 * row + column;
+    }
+
+    @Override
+    public String toString() {
+        return "(" + row + ", " + column + ")";
     }
 }

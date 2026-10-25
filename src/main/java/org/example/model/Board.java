@@ -8,6 +8,9 @@ public class Board {
     private final int row;
     private final List<Vehicle> vehicles;
     public Board(int row, int column) {
+        if (row <= 0 || column <= 0) {
+            throw new IllegalArgumentException("Board dimensions must be positive");
+        }
         this.column = column;
         this.row = row;
         this.vehicles = new ArrayList<>();
@@ -69,6 +72,9 @@ public class Board {
     }
 
     public boolean addVehicle(Vehicle vehicle) {
+        if (vehicle == null || getVehicle(vehicle.getId()) != null) {
+            return false;
+        }
         if (!isVehicleInside(vehicle)) {
             return false;
         }
@@ -89,7 +95,7 @@ public class Board {
         return null;
     }
     public boolean moveVehicle(Vehicle vehicle, int steps) {
-        if (getVehicle(vehicle.getId()) != vehicle) {
+        if (vehicle == null || getVehicle(vehicle.getId()) != vehicle) {
             return false;
         }
         if (steps == 0) return false;

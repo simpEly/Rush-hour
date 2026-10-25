@@ -1,54 +1,49 @@
-# Rush Hour — Java command-line game
+# Rush Hour — Java parancssoros játék
 
-Trò chơi Rush Hour hai bên: người chơi điều khiển mục tiêu của hero **A**,
-máy có hero **B**. Mỗi bên cố gắng đưa hero của mình ra ngoài qua cửa riêng.
-Giao diện và thông báo trong chương trình sử dụng tiếng Anh.
+Kétszemélyes Rush Hour játék, amelyben egy emberi játékos és egy véletlenszerű
+lépéseket választó gépi ellenfél játszik. A cél a saját céljármű kijuttatása a
+tábláról a hozzá rendelt kijáraton keresztül. A program felülete angol nyelvű.
 
-## Yêu cầu và cách chạy
+## Követelmények
 
-- JDK 21.
-- Maven, hoặc Maven tích hợp trong IntelliJ IDEA.
-- Internet khi tải dependency lần đầu.
+- JDK 21
+- Apache Maven vagy az IntelliJ IDEA beépített Maven-támogatása
+- Internetkapcsolat a függőségek első letöltéséhez
 
-### Chạy bằng IntelliJ IDEA
+## Fordítás és indítás
 
-1. Mở project chứa `pom.xml`, chờ IntelliJ tải các dependency Maven.
-2. Chọn Project SDK là Java 21.
-3. Mở `src/main/java/org/example/Main.java` và chạy `Main.main()`.
-4. Nhập lệnh trong cửa sổ Run, nhấn Enter để gửi lệnh.
-
-Không cần cài Maven vào PATH để chạy qua IntelliJ. Các Maven goal có thể chạy
-trong cửa sổ **View → Tool Windows → Maven → Execute Maven Goal**.
-
-### Chạy bằng terminal
-
-Tại thư mục chứa `pom.xml`:
+A projekt gyökérkönyvtárában, a `pom.xml` mellett:
 
 ```sh
 mvn clean install
 java -jar target/Rushhour-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
-Nếu terminal báo không nhận diện `mvn`, dùng cửa sổ Maven của IntelliJ hoặc
-cài Maven và thêm thư mục `bin` của Maven vào PATH.
+IntelliJ IDEA használata esetén a projekt Maven-projektként importálható.
+A projekt SDK-ját Java 21-re kell állítani, majd az
+`src/main/java/org/example/Main.java` osztály `main()` metódusa indítható.
+A parancsokat a Run ablakban lehet megadni.
 
-## Luật chơi
+## Játékszabályok
 
-- Người chơi đi trước. Sau mỗi bước hợp lệ, máy đi đúng một lượt.
-- Trong lượt của mình, mỗi bên được di chuyển **bất kỳ xe nào**, kể cả hero đối thủ.
-- Xe chỉ trượt theo hướng cố định: ngang hoặc dọc; không được xoay.
-- Một bước có thể đi nhiều ô, nhưng toàn bộ đường đi phải trống.
-- Xe không được chồng lên nhau hoặc nhảy qua xe khác.
-- Xe thường không được ra khỏi bàn cờ.
-- Hero chỉ được ra ngoài qua cửa riêng, đúng hàng và đúng phía.
-- Trong bản hiện tại, một bước thoát phải đưa **toàn bộ hero** ra ngoài;
-  bước khiến xe nằm nửa trong, nửa ngoài bị từ chối.
-- A thoát thành công thì người chơi thắng; B thoát thành công thì máy thắng,
-  bất kể bên nào vừa di chuyển xe đó. Trò chơi kết thúc ngay khi có hero thoát.
-- Lệnh sai, bước không hợp lệ, `show` và `help` không làm mất lượt.
-- Nếu không còn bước hợp lệ cho bất kỳ xe nào, chương trình kết thúc với kết quả hòa.
+- Az emberi játékos céljárműve **A**, a gépi játékosé **B**.
+- Az emberi játékos kezd. Minden érvényes lépése után a gép egy lépést hajt végre.
+- A soron lévő játékos bármelyik járművet mozgathatja, az ellenfél céljárművét is.
+- A járművek kizárólag a rögzített irányuk mentén csúsztathatók; nem forgathatók.
+- Egy lépésben több mező is megtehető, ha a teljes út szabad.
+- A járművek nem fedhetik át és nem ugorhatják át egymást.
+- A semleges járművek nem hagyhatják el a táblát.
+- A céljármű csak a saját kijáratán keresztül, a megfelelő sorban és irányban
+  hagyhatja el a táblát.
+- A jelenlegi megvalósításban a kijutást egyetlen lépésnek kell végrehajtania:
+  a teljes céljárműnek el kell hagynia a táblát. A részleges kilógás nem megengedett.
+- A kijutó céljármű tulajdonosa nyer, függetlenül attól, ki mozgatta a járművet.
+  A játék a győztes lépés után azonnal véget ér.
+- A hibás parancs, az érvénytelen lépés, valamint a `show` és a `help` parancs
+  nem adja át a lépés jogát a gépnek.
+- Ha egyik járműnek sincs érvényes lépése, a játék döntetlennel zárul.
 
-## Bàn cờ mặc định
+## Alapértelmezett pálya
 
 ```text
 . . . . C .
@@ -59,68 +54,73 @@ cài Maven và thêm thư mục `bin` của Maven vào PATH.
 . D . . . .
 ```
 
-Hàng và cột trong model bắt đầu từ **0**. Dấu `.` là ô trống.
+A `.` üres mezőt jelöl. A modellben a sorok és az oszlopok indexelése **0-tól** indul.
 
-| Xe | Vai trò | Hướng | Độ dài | Vị trí đầu (hàng, cột) |
+| Jármű | Szerep | Irány | Hossz | Kezdőpozíció (sor, oszlop) |
 | --- | --- | --- | --- | --- |
-| A | Hero người chơi | Ngang | 2 | (2, 1) |
-| B | Hero máy | Ngang | 2 | (4, 2) |
-| C | Xe chắn | Dọc | 3 | (0, 4) |
-| D | Xe chắn | Dọc | 3 | (3, 1) |
+| A | Emberi céljármű | Vízszintes | 2 | (2, 1) |
+| B | Gépi céljármű | Vízszintes | 2 | (4, 2) |
+| C | Semleges akadály | Függőleges | 3 | (0, 4) |
+| D | Semleges akadály | Függőleges | 3 | (3, 1) |
 
-A có cửa bên phải hàng 2; B có cửa bên trái hàng 4.
-C chắn đường A, còn D chắn đường B. Cấu hình nằm trong `Main.createBoard()`.
-`Board` hỗ trợ kích thước hàng/cột dương khác; bản chạy mặc định dùng 6 × 6.
+A kijárata a 2. indexű sor jobb szélén, B kijárata a 4. indexű sor bal szélén van.
+Kezdetben C akadályozza A, D pedig B kijutását.
+A pálya beállításait a `Main.createBoard()` metódus tartalmazza.
+A `Board` tetszőleges pozitív sorszámú és oszlopszámú táblát kezel;
+az alapértelmezett pálya mérete 6 × 6.
 
-## Các lệnh
+## Parancsok
 
-| Lệnh | Tác dụng |
+| Parancs | Művelet |
 | --- | --- |
-| `show` | In bàn cờ hiện tại và thông tin cửa thoát |
-| `help` | Hiện hướng dẫn |
-| `move A 1` | Di chuyển A sang phải 1 ô |
-| `move B -1` | Di chuyển B sang trái 1 ô |
-| `move C 3` | Di chuyển C xuống 3 ô |
-| `move D -1` | Di chuyển D lên 1 ô, nếu đường trống |
-| `quit` | Thoát chương trình |
+| `show` | Az aktuális tábla és a kijáratok megjelenítése |
+| `help` | A parancsok ismertetése |
+| `move A 1` | A mozgatása egy mezővel jobbra |
+| `move B -1` | B mozgatása egy mezővel balra |
+| `move C 3` | C mozgatása három mezővel lefelé |
+| `move D -1` | D mozgatása egy mezővel felfelé, ha az út szabad |
+| `quit` | Kilépés a programból |
 
-Số bước dương: phải/xuống. Số bước âm: trái/lên. Bước 0 không hợp lệ.
-Tên lệnh không phân biệt hoa thường, nhưng ID xe có phân biệt (`A` khác `a`).
-Ví dụ các lệnh trên minh họa cú pháp, không bảo đảm đều hợp lệ tại mọi trạng thái.
+Általános alak: `move <járműazonosító> <lépésszám>`.
+A pozitív lépésszám jobbra vagy lefelé, a negatív balra vagy felfelé mozgat.
+A nulla lépésszám érvénytelen. A parancsnevek nem különböztetik meg a kis- és
+nagybetűket, a járműazonosítók viszont igen (`A` és `a` különböző).
+A példák a parancsok alakját szemléltetik; végrehajthatóságuk a tábla állapotától függ.
 
-## AI ngẫu nhiên
+## Gépi ellenfél
 
-`ComputerPlayer` thực hiện ba bước:
+A `ComputerPlayer` véletlenszerűen választ lépést:
 
-1. Tìm các xe có ít nhất một bước hợp lệ.
-2. Chọn ngẫu nhiên một xe trong danh sách đó.
-3. Chọn ngẫu nhiên một bước hợp lệ của xe đã chọn.
+1. Összegyűjti azokat a járműveket, amelyeknek van legalább egy érvényes lépése.
+2. Véletlenszerűen kiválaszt egy járművet ebből a listából.
+3. Véletlenszerűen kiválasztja a jármű egyik érvényes lépését.
 
-AI dùng `java.util.Random`, không có tìm kiếm chiến thuật hoặc ưu tiên thắng.
-AI có thể vô tình giúp A thoát. Kết quả mỗi ván có thể khác nhau.
-`Board.canMoveVehicle()` chỉ kiểm tra, không làm thay đổi bàn cờ khi AI chọn bước.
+A választás a `java.util.Random` segítségével történik. Az algoritmus nem végez
+stratégiai keresést és nem részesíti előnyben a győztes lépéseket, ezért akár az
+emberi céljármű kijutását is elősegítheti. A lehetséges lépések vizsgálata a
+`Board.canMoveVehicle()` metódussal történik, a tábla állapotának módosítása nélkül.
 
-## Cấu trúc code
+## A program felépítése
 
-| Lớp | Trách nhiệm |
+| Osztály | Feladat |
 | --- | --- |
-| `Main` | Tạo bàn cờ mẫu và gọi `Game.start()` |
-| `Game` | Đọc lệnh, điều phối lượt người–máy, thông báo kết quả |
-| `Board` | Quản lý xe, kiểm tra bước đi, thực hiện di chuyển và xác định hero thắng |
-| `Vehicle` | Lưu ID, độ dài, hướng, vị trí và cờ hero |
-| `Position` | Value object tọa độ bất biến, có `equals`, `hashCode`, `toString` |
-| `Orientation` | Hai hướng xe: ngang và dọc |
-| `Exit` | Lưu hero được phép thoát, hàng cửa và phía trái/phải |
-| `Move` | Lưu xe và số bước của một lựa chọn di chuyển |
-| `ComputerPlayer` | Chọn bước hợp lệ ngẫu nhiên |
-| `BoardPrinter` | In bàn cờ và thông tin cửa thoát |
+| `Main` | Az alapértelmezett pálya létrehozása és a `Game.start()` meghívása |
+| `Game` | Parancsfeldolgozás, a körök vezérlése és az eredmény közlése |
+| `Board` | Járművek kezelése, lépésellenőrzés, mozgatás és győzelem felismerése |
+| `Vehicle` | Azonosító, hossz, irány, pozíció és céljárműjelző tárolása |
+| `Position` | Megváltoztathatatlan koordinátaérték `equals`, `hashCode` és `toString` metódussal |
+| `Orientation` | A vízszintes és függőleges irány felsorolása |
+| `Exit` | A kijárathoz rendelt céljármű, sor és oldal tárolása |
+| `Move` | Egy jármű és a hozzá tartozó lépésszám tárolása |
+| `ComputerPlayer` | Véletlenszerű érvényes gépi lépés kiválasztása |
+| `BoardPrinter` | A tábla és a kijáratok konzolos megjelenítése |
 
-Luồng một lượt: `Game` đọc lệnh → `Board` kiểm tra và di chuyển →
-`BoardPrinter` hiển thị → nếu chưa thắng, `ComputerPlayer` chọn bước cho máy.
+A `Game` feldolgozza a parancsot, a `Board` ellenőrzi és végrehajtja a lépést,
+a `BoardPrinter` pedig megjeleníti az új állapotot. Érvényes emberi lépés után,
+ha még nincs győztes, a `ComputerPlayer` választ lépést a gép számára.
+A játékmenet vezérlése nem a `main()` metódusban történik.
 
-## Kiểm thử và công cụ Maven
-
-Chạy trong terminal, hoặc nhập phần goal (không có `mvn`) vào Maven của IntelliJ:
+## Tesztelés és kódellenőrzés
 
 ```sh
 mvn test
@@ -128,46 +128,31 @@ mvn clean verify
 mvn checkstyle:check
 ```
 
-- `test`: chạy các test JUnit 5.
-- `verify`: chạy test, đóng gói JAR và tạo báo cáo JaCoCo.
-- `checkstyle:check`: kiểm tra định dạng và quy ước code riêng biệt.
+- `test`: a JUnit 5 tesztek futtatása.
+- `verify`: tesztelés, JAR-csomagolás és a JaCoCo-jelentés előállítása.
+- `checkstyle:check`: a kódformázási és stílusszabályok külön ellenőrzése.
 
-Mở `target/site/jacoco/index.html` bằng trình duyệt để xem coverage.
-Trên Windows PowerShell có thể dùng:
+A JaCoCo lefedettségi jelentése a `target/site/jacoco/index.html` fájlban érhető el,
+amely böngészővel nyitható meg.
 
-```powershell
-Start-Process .\target\site\jacoco\index.html
-```
+A tesztek ellenőrzik a modell érvényességi feltételeit, a mozgatást, az ütközéseket,
+a kijáratokat, a győzelmet, a parancsfeldolgozást, a gépi lépésválasztást és a
+körök váltását. A parancsfeldolgozás tesztjei előre megadott szöveges bemenetet
+adnak át egy `Scanner` objektumnak, majd ellenőrzik a tábla állapotát.
+A konzolra írt üzenetek szövegét nem hasonlítják össze automatikusan.
+A gépi játékos tesztjei rögzített véletlenmagot vagy előre meghatározott lépést
+választó tesztobjektumot használnak a megismételhetőség érdekében.
 
-Các test kiểm tra model, đường đi, cửa thoát, thắng/thua, xử lý lệnh, chọn bước
-ngẫu nhiên và luân phiên lượt. Test tương tác dùng `Scanner` với chuỗi lệnh rồi
-kiểm tra trạng thái bàn cờ; không tự so sánh nội dung được in ra console.
-Test AI dùng seed cố định hoặc đối tượng máy có bước đi định trước để kiểm tra
-có thể lặp lại.
+A Maven-konfiguráció JaCoCo-jelentést készít, de jelenleg nem kényszeríti ki
+a 80%-os lefedettségi küszöböt. A Checkstyle-ellenőrzés külön paranccsal futtatható,
+nincs automatikusan a build életciklusához kötve.
 
-Cấu hình hiện tại tạo báo cáo coverage nhưng **chưa bắt buộc ngưỡng 80%**.
-Checkstyle chưa được gắn tự động vào lifecycle build; cần chạy goal riêng.
-`BUILD SUCCESS` không đồng nghĩa không có cảnh báo hoặc code không còn lỗi.
+## Jelenlegi funkciók és korlátok
 
-## Phạm vi hiện tại và các ý cần trình bày
+A megvalósítás tartalmazza a játékmodell osztályait, a parancssoros interakciót,
+a váltott emberi és gépi köröket, a véletlenszerű gépi ellenfelet, a bal és jobb
+oldali kijáratokat, valamint a győzelem és a lépés nélküli döntetlen felismerését.
 
-Bản hiện tại có model, CLI, lượt người–máy, AI ngẫu nhiên, cửa thoát trái/phải và
-điều kiện kết thúc. Có thể dùng để demo quy trình chơi đến khi có hero thắng.
-
-Chưa có đọc/ghi bàn cờ từ file, database/high score, lưu ván đang chơi hoặc cửa
-trên/dưới. Bàn cờ khởi tạo được viết trực tiếp trong code. Đây chưa phải toàn bộ
-các chức năng được liệt kê trong yêu cầu chung cuối kỳ.
-
-Khi bảo vệ, nên giải thích được:
-
-1. Vì sao tách model, điều phối game và phần in bàn cờ.
-2. `canMoveVehicle()` khác `moveVehicle()` như thế nào.
-3. Cách kiểm tra mọi ô trên đường đi, thay vì chỉ kiểm tra vị trí đích.
-4. Vì sao chỉ hero đúng cửa mới được vượt biên.
-5. Vì sao `Position` bất biến và cần cả `equals()` lẫn `hashCode()`.
-6. Cách chọn xe rồi chọn bước ngẫu nhiên; vì sao bỏ qua xe bị kẹt.
-7. Vì sao lệnh sai không đổi lượt và tại sao phải dừng ngay sau bước thắng.
-
-Để demo, có thể thử `show`, một lệnh sai như `move A abc`, bước bị chắn ban đầu
-`move A 5`, rồi bước mở đường `move C 3`. Sau đó chọn bước dựa trên bàn cờ mới,
-vì AI tự di chuyển giữa các lượt; không có chuỗi lệnh cố định bảo đảm thắng.
+A kezdőállapot jelenleg a kódban van megadva. A fájlból történő pályabetöltés,
+a játékállás mentése és visszatöltése, az adatbázisos eredménytábla, valamint
+a felső és alsó kijáratok kezelése még nem része a megvalósításnak.

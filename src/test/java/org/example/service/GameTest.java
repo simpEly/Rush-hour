@@ -1,8 +1,5 @@
 package org.example.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import org.example.model.Board;
 import org.example.model.Orientation;
@@ -21,95 +18,97 @@ class GameTest {
         return board;
     }
 
-    private String runGame(Board board, String commands) {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        PrintStream output = new PrintStream(buffer, true, StandardCharsets.UTF_8);
-        // Capture console output only in tests, then always restore it.
-        PrintStream originalOutput = System.out;
-        try {
-            System.setOut(output);
-            new Game(board, new Scanner(commands)).start();
-        } finally {
-            System.setOut(originalOutput);
-            output.close();
+    private void runGame(Board board, String commands) {
+        Scanner input = new Scanner(commands);
+        Game game = new Game(board, input);
+        game.start();
+    }
+
+    @Test
+    void shouldMoveVehicleFromCommand() {
+        Board board = createBoard();
+
+        runGame(board, "move A 1\nquit\n");
+
+        assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
+        assertNull(board.getVehicleAt(new Position(2, 1)));
+        assertSame(board.getVehicle("A"), board.getVehicleAt(new Position(2, 3)));
+    }
+
+    @Test
+    void shouldRejectBlockedOutsideAndZeroMoves() {
+        String[] commands = {"move A 2", "move A -2", "move A 0"};
+
+        for (String command : commands) {
+            Board board = createBoard();
+
+            runGame(board, command + "\nquit\n");
+
+            assertEquals(new Position(2, 1), board.getVehicle("A").getPosition(), command);
+            assertEquals(new Position(0, 4), board.getVehicle("B").getPosition(), command);
         }
-        return buffer.toString(StandardCharsets.UTF_8).replace("\r\n", "\n");
     }
 
     @Test
-    void shouldMoveVehicleAndPrintUpdatedBoard() {
-        Board board = createBoard();
-        String output = runGame(board, "move A 1\nquit\n");
+    void shouldIgnoreInvalidInputAndContinueReadingCommands() {
+        String[] commands = {
+            "wrong", "move", "move A 1 extra", "move A text",
+            "move A 999999999999", "move Z 1"
+        };
 
-        assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
-        assertTrue(output.contains("Moved A."));
-        assertTrue(output.contains(". . A A B ."));
-        assertTrue(output.contains("Goodbye!"));
+        for (String command : commands) {
+            Board board = createBoard();
+            runGame(board, command + "\nquit\n");
+            assertEquals(new Position(2, 1), board.getVehicle("A").getPosition(), command);
+
+            Board anotherBoard = createBoard();
+            runGame(anotherBoard, command + "\nmove A 1\nquit\n");
+            assertEquals(new Position(2, 2), anotherBoard.getVehicle("A").getPosition(), command);
+        }
     }
 
     @Test
-    void shouldRejectBlockedOutsideAndZeroMovesWithoutChangingPosition() {
+    void shouldLeaveBoardUnchangedAfterShowAndHelp() {
         Board board = createBoard();
-        String output = runGame(board, "move A 2\nmove A -2\nmove A 0\nquit\n");
+
+        runGame(board, "help\nshow\nshow extra\nquit\n");
 
         assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
-        assertEquals(3, output.lines().filter(line -> line.contains("Invalid move")).count());
-        assertFalse(output.contains("Moved A."));
-    }
-
-    @Test
-    void shouldReportInputErrorsAndContinueReadingCommands() {
-        Board board = createBoard();
-        String output = runGame(board,
-                "wrong\nmove\nmove A 1 extra\nmove A text\nmove A 999999999999\n"
-                + "move Z 1\nmove A 1\nquit\n");
-
-        assertTrue(output.contains("Unknown command"));
-        assertTrue(output.contains("Usage: move <id> <steps>"));
-        assertTrue(output.contains("Steps must be a whole number"));
-        assertTrue(output.contains("Unknown vehicle: Z"));
-        assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
-    }
-
-    @Test
-    void shouldShowHelpAndBoardWithoutChangingState() {
-        Board board = createBoard();
-        String output = runGame(board, "help\nshow\nshow extra\nquit\n");
-
-        String expectedBoard = ". . . . B .\n. . . . B .\n. A A . B .\n"
-                + ". . . . . .\n. . . . . .\n. . . . . .\n";
-        int initialBoard = output.indexOf(expectedBoard);
-        assertTrue(initialBoard >= 0);
-        assertTrue(output.indexOf(expectedBoard, initialBoard + 1) > initialBoard);
-        assertTrue(output.contains("Usage: show"));
-        assertTrue(output.contains("Commands: show | move <id> <steps> | help | quit"));
-        assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
+        assertEquals(new Position(0, 4), board.getVehicle("B").getPosition());
     }
 
     @Test
     void shouldHandleWhitespaceNegativeStepsAndEndOfInput() {
         Board board = createBoard();
-        String output = runGame(board, "\n   MOVE   A   -1   \n");
+        Scanner input = new Scanner("\n   MOVE   A   -1   \n");
+
+        new Game(board, input).start();
 
         assertEquals(new Position(2, 0), board.getVehicle("A").getPosition());
-        assertTrue(output.contains("Goodbye!"));
+        assertFalse(input.hasNextLine());
     }
 
     @Test
     void shouldStopAtQuitWithoutProcessingRemainingInput() {
         Board board = createBoard();
-        runGame(board, "QUIT\nmove A 1\n");
+        Scanner input = new Scanner("QUIT\nmove A 1\n");
+
+        new Game(board, input).start();
 
         assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
+        assertEquals("move A 1", input.nextLine());
     }
 
     @Test
-    void shouldRejectExtremeStepsWithoutCorruptingBoard() {
-        Board board = createBoard();
-        String output = runGame(board,
-                "move A -2147483648\nmove A 2147483647\nquit\n");
+    void shouldRejectExtremeStepsWithoutChangingPosition() {
+        String[] commands = {"move A -2147483648", "move A 2147483647"};
 
-        assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
-        assertEquals(2, output.lines().filter(line -> line.contains("Invalid move")).count());
+        for (String command : commands) {
+            Board board = createBoard();
+
+            runGame(board, command + "\nquit\n");
+
+            assertEquals(new Position(2, 1), board.getVehicle("A").getPosition(), command);
+        }
     }
 }

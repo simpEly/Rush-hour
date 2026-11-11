@@ -231,5 +231,33 @@ public class Board {
         }
         return false;
     }
+    public boolean isIncompleteExit(Vehicle vehicle, int steps) {
+        if (vehicle == null || !vehicle.isHero()
+                || vehicle.getOrientation() != Orientation.horizontal) {
+            return false;
+        }
+
+        long destination =
+                (long) vehicle.getPosition().getColumn() + steps;
+
+        for (Exit exit : exits) {
+            if (!exit.getVehicleId().equals(vehicle.getId())
+                    || exit.getRow() != vehicle.getPosition().getRow()) {
+                continue;
+            }
+
+            if (exit.isRightSide()) {
+                return steps > 0
+                        && destination < column
+                        && destination + vehicle.getLength() > column;
+            } else {
+                return steps < 0
+                        && destination < 0
+                        && destination + vehicle.getLength() > 0;
+            }
+        }
+
+        return false;
+    }
 
 }

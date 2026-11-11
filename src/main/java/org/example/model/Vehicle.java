@@ -11,8 +11,8 @@ public class Vehicle {
         if (id == null || !id.matches("\\S+")) {
             throw new IllegalArgumentException("Vehicle ID must not be empty or contain whitespace");
         }
-        if (length <= 0) {
-            throw new IllegalArgumentException("Vehicle length must be positive");
+        if (length <= 1) {
+            throw new IllegalArgumentException("Vehicle length must be longer than 1");
         }
         if (orientation == null || position == null) {
             throw new IllegalArgumentException("Vehicle orientation and position are required");

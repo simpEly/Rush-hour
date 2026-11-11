@@ -13,9 +13,9 @@ import static org.junit.jupiter.api.Assertions.*;
 class ComputerPlayerTest {
     @Test
     void shouldReturnNullWhenAllVehiclesAreBlocked() {
-        Board board = new Board(1, 3);
+        Board board = new Board(1, 4);
         board.addVehicle(new Vehicle("C", 2, Orientation.horizontal, new Position(0, 0), false));
-        board.addVehicle(new Vehicle("D", 1, Orientation.horizontal, new Position(0, 2), false));
+        board.addVehicle(new Vehicle("D", 2, Orientation.horizontal, new Position(0, 2), false));
         ComputerPlayer computer = new ComputerPlayer(new Random(1));
 
         assertFalse(computer.hasLegalMove(board));

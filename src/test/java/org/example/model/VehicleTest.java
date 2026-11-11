@@ -7,7 +7,7 @@ class VehicleTest {
     @Test
     void shouldRejectInvalidLength() {
         assertThrows(IllegalArgumentException.class, () ->
-                new Vehicle("A", 0, Orientation.horizontal, new Position(0, 0), false));
+                new Vehicle("A", 1, Orientation.horizontal, new Position(0, 0), false));
         assertThrows(IllegalArgumentException.class, () ->
                 new Vehicle("A", -1, Orientation.horizontal, new Position(0, 0), false));
     }

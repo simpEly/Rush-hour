@@ -109,7 +109,11 @@ public class Game {
             return false;
         }
         if (!board.moveVehicle(vehicle, steps)) {
-            System.out.println("Invalid move: blocked, outside board, or zero steps.");
+            if (board.isIncompleteExit(vehicle, steps)) {
+                System.out.println("Vehicle must exit the board completely.");
+            } else {
+                System.out.println("Invalid move: blocked, outside board, or zero steps.");
+            }
             return false;
         }
 
@@ -128,4 +132,5 @@ public class Game {
         System.out.println("Computer: move " + move.getVehicle().getId() + " " + move.getSteps());
         printer.print(board);
     }
+
 }

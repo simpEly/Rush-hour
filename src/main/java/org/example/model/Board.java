@@ -174,7 +174,7 @@ public class Board {
     }
 
     public void addExit(Exit exit) {
-        if (exit == null || exit.getRow() >= row || winner != null) {
+        if (exit == null || exit.getRow() < 0 || exit.getRow() >= row || winner != null) {
             throw new IllegalArgumentException("Invalid exit configuration");
         }
         Vehicle hero = getVehicle(exit.getVehicleId());

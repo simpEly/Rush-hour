@@ -1,6 +1,9 @@
 package org.example.service;
 
+import java.io.IOException;
 import java.util.Scanner;
+
+import org.example.engine.GameFactory;
 import org.example.model.Board;
 import org.example.model.Move;
 import org.example.model.Vehicle;
@@ -60,7 +63,13 @@ public class Game {
                 }
             } else if (command.equalsIgnoreCase("help")) {
                 showHelp();
-            } else if (command.equalsIgnoreCase("move")) {
+            } else if (command.equalsIgnoreCase("save")) {
+                if (parts.length == 1) {
+                    handleSave();
+                } else {
+                    System.out.println("Usage: save");
+                }
+            }else if (command.equalsIgnoreCase("move")) {
                 boolean moved = handleMove(parts);
                 if (moved && board.getWinner() == null) {
                     playComputerTurn();
@@ -87,6 +96,16 @@ public class Game {
         System.out.println("Positive steps: right/down. Negative steps: left/up.");
         System.out.println("Example: move A 2. Vehicle IDs are case-sensitive.");
         System.out.println("To win, move the entire hero out through its own exit in one move.");
+        System.out.println("save - Save current game to save.txt");
+    }
+
+    private void handleSave() {
+        try {
+            GameFactory.saveBoard(board, "save.txt");
+            System.out.println("Game saved successfully.");
+        } catch (IOException e) {
+            System.out.println("Cannot save game: " + e.getMessage());
+        }
     }
 
     private boolean handleMove(String[] parts) {

@@ -38,3 +38,6 @@ build/
 ### Mac OS ###
 .DS_Store
 /save.txt
+/rushhour.db
+/.idea/dataSources.xml
+/.idea/data_source_mapping.xml

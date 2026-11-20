@@ -8,6 +8,7 @@ import org.example.model.Board;
 import org.example.model.Move;
 import org.example.model.Vehicle;
 import org.example.ui.BoardPrinter;
+import org.example.database.PlayerRepository;
 
 public class Game {
     private final String humanHeroId = "A";
@@ -16,17 +17,28 @@ public class Game {
     private final Scanner input;
     private final BoardPrinter printer;
     private final ComputerPlayer computerPlayer;
+    private final String playerName;
+    private final PlayerRepository repository;
 
-    public Game(Board board, Scanner input) {
-        this(board, input, new ComputerPlayer());
+
+
+    public Game(Board board, Scanner input,
+                String playerName, PlayerRepository repository) {
+        this(board, input, new ComputerPlayer(), playerName, repository);
     }
 
-    public Game(Board board, Scanner input, ComputerPlayer computerPlayer) {
+    public Game(Board board, Scanner input,
+                ComputerPlayer computerPlayer,
+                String playerName, PlayerRepository repository) {
         this.board = board;
         this.input = input;
         this.printer = new BoardPrinter();
         this.computerPlayer = computerPlayer;
+        this.playerName = playerName;
+        this.repository = repository;
     }
+
+
 
     public void start() {
         System.out.println("Rush Hour - human vs computer");
@@ -69,7 +81,13 @@ public class Game {
                 } else {
                     System.out.println("Usage: save");
                 }
-            }else if (command.equalsIgnoreCase("move")) {
+            } else if (command.equalsIgnoreCase("highscore")) {
+                if (parts.length == 1) {
+                    repository.showHighScores();
+                } else {
+                    System.out.println("Usage: highscore");
+                }
+            } else if (command.equalsIgnoreCase("move")) {
                 boolean moved = handleMove(parts);
                 if (moved && board.getWinner() == null) {
                     playComputerTurn();
@@ -80,15 +98,19 @@ public class Game {
         }
         if (board.getWinner() != null) {
             String winnerId = board.getWinner().getId();
+
             if (winnerId.equals(humanHeroId)) {
                 System.out.println("You win! Hero " + winnerId + " escaped.");
+
+                repository.addWin(playerName);
+                repository.showHighScores();
+
             } else if (winnerId.equals(computerHeroId)) {
                 System.out.println("Computer wins! Hero " + winnerId + " escaped.");
             } else {
                 System.out.println("Hero " + winnerId + " wins!");
             }
         }
-        System.out.println("Goodbye!");
     }
 
     private void showHelp() {
@@ -97,6 +119,7 @@ public class Game {
         System.out.println("Example: move A 2. Vehicle IDs are case-sensitive.");
         System.out.println("To win, move the entire hero out through its own exit in one move.");
         System.out.println("save - Save current game to save.txt");
+        System.out.println("Commands: show | move <id> <steps> | save | highscore | help | quit");
     }
 
     private void handleSave() {

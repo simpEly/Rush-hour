@@ -5,6 +5,7 @@ import org.example.model.Position;
 import org.example.model.Vehicle;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import org.example.engine.GameFactory;
 
 class MainTest {
     @Test

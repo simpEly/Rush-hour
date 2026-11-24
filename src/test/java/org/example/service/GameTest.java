@@ -1,6 +1,11 @@
 package org.example.service;
 
+import java.io.IOException;
 import java.util.Scanner;
+import org.example.engine.GameFactory;
+import org.example.model.SavedGame;
+import org.example.model.Turn;
+import org.example.database.PlayerRepository;
 import org.example.model.Board;
 import org.example.model.Exit;
 import org.example.model.Move;
@@ -9,8 +14,12 @@ import org.example.model.Position;
 import org.example.model.Vehicle;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class GameTest {
+    private final PlayerRepository repository = mock(PlayerRepository.class);
+    private static final String PLAYER = "Test player";
+
     // Predictable movement keeps command tests independent of random choices.
     private static class PredictableComputer extends ComputerPlayer {
         private int turnCount;
@@ -35,7 +44,7 @@ class GameTest {
 
     private void runGame(Board board, String commands) {
         Scanner input = new Scanner(commands);
-        Game game = new Game(board, input, new PredictableComputer());
+        Game game = new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository);
         game.start();
     }
 
@@ -97,7 +106,7 @@ class GameTest {
         Board board = createBoard();
         Scanner input = new Scanner("\n   MOVE   A   -1   \n");
 
-        new Game(board, input, new PredictableComputer()).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository).start();
 
         assertEquals(new Position(2, 0), board.getVehicle("A").getPosition());
         assertFalse(input.hasNextLine());
@@ -108,7 +117,7 @@ class GameTest {
         Board board = createBoard();
         Scanner input = new Scanner("QUIT\nmove A 1\n");
 
-        new Game(board, input, new PredictableComputer()).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository).start();
 
         assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
         assertEquals("move A 1", input.nextLine());
@@ -134,7 +143,7 @@ class GameTest {
         Scanner input = new Scanner("move A 5\nmove B -1\n");
         Vehicle hero = board.getVehicle("A");
 
-        new Game(board, input, new PredictableComputer()).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository).start();
 
         assertSame(hero, board.getWinner());
         assertNull(board.getVehicle("A"));
@@ -153,7 +162,7 @@ class GameTest {
         board.addExit(new Exit("B", 4, false));
         Scanner input = new Scanner("move B -3\nmove A 1\n");
 
-        new Game(board, input, new PredictableComputer()).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository).start();
 
         assertSame(computerHero, board.getWinner());
         assertSame(humanHero, board.getVehicle("A"));
@@ -169,7 +178,7 @@ class GameTest {
         Scanner input = new Scanner("help\nshow\nwrong\nmove A text\nmove A 0\n"
                 + "move A 2\nmove A 1\nquit\n");
 
-        new Game(board, input, computer).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository).start();
 
         assertEquals(1, computer.turnCount);
         assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
@@ -184,10 +193,14 @@ class GameTest {
         board.addExit(new Exit("A", 0, true));
         PredictableComputer computer = new PredictableComputer();
 
-        new Game(board, new Scanner("move A 6\n"), computer).start();
+        new Game(new SavedGame(board, Turn.HUMAN), new Scanner("move A 6\n"), computer, PLAYER, repository).start();
 
         assertSame(hero, board.getWinner());
         assertEquals(0, computer.turnCount);
+        var scoreUpdates = inOrder(repository);
+        scoreUpdates.verify(repository).addWin(PLAYER);
+        scoreUpdates.verify(repository).showHighScores();
+        scoreUpdates.verifyNoMoreInteractions();
     }
 
     @Test
@@ -207,9 +220,10 @@ class GameTest {
         };
         Scanner input = new Scanner("move A 1\nmove A 1\n");
 
-        new Game(board, input, computer).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository).start();
 
         assertSame(machine, board.getWinner());
+        verifyNoInteractions(repository);
         assertEquals(new Position(0, 1), human.getPosition());
         assertEquals("move A 1", input.nextLine());
     }
@@ -221,11 +235,72 @@ class GameTest {
         board.addVehicle(car);
         Scanner input = new Scanner("show\n");
 
-        new Game(board, input).start();
+        new Game(new SavedGame(board, Turn.HUMAN), input, PLAYER, repository).start();
 
         assertNull(board.getWinner());
         assertEquals("show", input.nextLine());
         assertEquals(new Position(0, 0), car.getPosition());
     }
 
+    @Test
+    void shouldShowHighScoresWithoutGivingTheComputerATurn() {
+        Board board = createBoard();
+        PredictableComputer computer = new PredictableComputer();
+        Scanner input = new Scanner("highscore extra\nhighscore\nquit\n");
+
+        new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository).start();
+
+        verify(repository).showHighScores();
+        verifyNoMoreInteractions(repository);
+        assertEquals(0, computer.turnCount);
+        assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
+    }
+    @Test
+    void shouldPlaySavedComputerTurnBeforeHandlingQuit() {
+        Board board = createBoard();
+        PredictableComputer computer = new PredictableComputer();
+        Scanner input = new Scanner("quit\nmove A 1\n");
+
+        new Game(new SavedGame(board, Turn.COMPUTER), input, computer, PLAYER, repository)
+                .start();
+
+        assertEquals(1, computer.turnCount);
+        assertEquals(new Position(1, 4), board.getVehicle("B").getPosition());
+        assertEquals(new Position(2, 1), board.getVehicle("A").getPosition());
+        assertEquals("move A 1", input.nextLine());
+    }
+
+    @Test
+    void shouldSaveOnlyValidNamesWithoutConsumingTheTurn() {
+        Board board = createBoard();
+        PredictableComputer computer = new PredictableComputer();
+        Scanner input = new Scanner("save\nsave two words\nsave ../outside\nsave slot_1-2\nquit\n");
+
+        try (var factory = mockStatic(GameFactory.class)) {
+            new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository)
+                    .start();
+
+            factory.verify(() -> GameFactory.saveBoard(board, Turn.HUMAN, "saves/slot_1-2.txt"));
+            factory.verifyNoMoreInteractions();
+        }
+        assertEquals(0, computer.turnCount);
+    }
+
+    @Test
+    void shouldContinueAfterSaveFails() {
+        Board board = createBoard();
+        PredictableComputer computer = new PredictableComputer();
+        Scanner input = new Scanner("save blocked\nmove A 1\nquit\n");
+        try (var factory = mockStatic(GameFactory.class)) {
+            factory.when(() -> GameFactory.saveBoard(board, Turn.HUMAN, "saves/blocked.txt"))
+                    .thenThrow(new IOException("write failed"));
+
+            new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository)
+                    .start();
+
+            factory.verify(() -> GameFactory.saveBoard(board, Turn.HUMAN, "saves/blocked.txt"));
+        }
+        assertEquals(1, computer.turnCount);
+        assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
+    }
 }

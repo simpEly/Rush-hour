@@ -1,10 +1,19 @@
 package org.example.database;
 
+import java.nio.file.Path;
 import java.sql.*;
 
 public class PlayerRepository {
 
-    private static final String URL = "jdbc:sqlite:rushhour.db";
+    private final String url;
+
+    public PlayerRepository() {
+        this(Path.of("rushhour.db"));
+    }
+
+    PlayerRepository(Path databaseFile) {
+        url = "jdbc:sqlite:" + databaseFile;
+    }
 
     public void createTable() {
         String sql = """
@@ -15,7 +24,7 @@ public class PlayerRepository {
                 )
                 """;
 
-        try (Connection connection = DriverManager.getConnection(URL);
+        try (Connection connection = DriverManager.getConnection(url);
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
@@ -34,7 +43,7 @@ public class PlayerRepository {
             DO UPDATE SET wins = wins + 1
             """;
 
-        try (Connection connection = DriverManager.getConnection(URL);
+        try (Connection connection = DriverManager.getConnection(url);
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, playerName);
@@ -54,7 +63,7 @@ public class PlayerRepository {
             ORDER BY wins DESC, name ASC
             """;
 
-        try (Connection connection = DriverManager.getConnection(URL);
+        try (Connection connection = DriverManager.getConnection(url);
              PreparedStatement statement = connection.prepareStatement(sql);
              ResultSet result = statement.executeQuery()) {
 

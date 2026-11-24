@@ -28,8 +28,10 @@ public class GameFactory {
         return board;
     }
 
-    public static Board loadBoardFromFile(String path) throws IOException {
+
+    public static SavedGame loadGameFromFile(String path) throws IOException {
         Board board = null;
+        Turn turn = null;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
             String line;
@@ -57,6 +59,20 @@ public class GameFactory {
                         }
 
                         board = new Board(rows, cols);
+                        break;
+
+                    case "TURN":
+                        if (board == null || parts.length != 2 || turn != null) {
+                            throw new IllegalArgumentException("Invalid TURN line");
+                        }
+
+                        if (parts[1].equals("HUMAN")) {
+                            turn = Turn.HUMAN;
+                        } else if (parts[1].equals("COMPUTER")) {
+                            turn = Turn.COMPUTER;
+                        } else {
+                            throw new IllegalArgumentException("Unknown turn: " + parts[1]);
+                        }
                         break;
 
                     case "VEHICLE":
@@ -133,6 +149,10 @@ public class GameFactory {
             throw new IllegalArgumentException("Missing BOARD");
         }
 
+        if (turn == null) {
+            throw new IllegalArgumentException("Missing TURN");
+        }
+
         long heroCount = board.getVehicles().stream()
                 .filter(Vehicle::isHero)
                 .count();
@@ -160,23 +180,16 @@ public class GameFactory {
             }
         }
 
-        return board;
+        return new SavedGame(board, turn);
     }
 
-    public static Board createInitialBoard(String path) {
-        try {
-            return loadBoardFromFile(path);
-        } catch (IOException | IllegalArgumentException e) {
-            System.err.println("Cannot load level: " + e.getMessage());
-            System.out.println("Default level load");
-            return createDefaultBoard();
-        }
-    }
-    public static void saveBoard(Board board, String path)
+    public static void saveBoard(Board board, Turn turn, String path)
             throws IOException {
 
         String content = "BOARD " + board.getRow()
                 + " " + board.getColumn() + "\n";
+
+        content += "TURN " + turn + "\n";
 
         for (Vehicle vehicle : board.getVehicles()) {
             Position position = vehicle.getPosition();
@@ -201,10 +214,16 @@ public class GameFactory {
                     + (exit.isRightSide() ? "RIGHT" : "LEFT") + "\n";
         }
 
+        Path savePath = Path.of(path);
+        Path parent = savePath.getParent();
 
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
 
-        Files.writeString(Path.of(path), content);
+        Files.writeString(savePath, content);
     }
+
 
 
 

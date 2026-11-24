@@ -9,11 +9,14 @@ import org.example.model.Move;
 import org.example.model.Vehicle;
 import org.example.ui.BoardPrinter;
 import org.example.database.PlayerRepository;
+import org.example.model.Turn;
+import org.example.model.SavedGame;
 
 public class Game {
     private final String humanHeroId = "A";
     private final String computerHeroId = "B";
     private final Board board;
+    private Turn turn = Turn.HUMAN;
     private final Scanner input;
     private final BoardPrinter printer;
     private final ComputerPlayer computerPlayer;
@@ -22,15 +25,18 @@ public class Game {
 
 
 
-    public Game(Board board, Scanner input,
+    public Game(SavedGame savedGame, Scanner input,
                 String playerName, PlayerRepository repository) {
-        this(board, input, new ComputerPlayer(), playerName, repository);
+        this(savedGame, input, new ComputerPlayer(), playerName, repository);
     }
 
-    public Game(Board board, Scanner input,
+
+
+    public Game(SavedGame savedGame, Scanner input,
                 ComputerPlayer computerPlayer,
                 String playerName, PlayerRepository repository) {
-        this.board = board;
+        this.board = savedGame.board();
+        this.turn = savedGame.turn();
         this.input = input;
         this.printer = new BoardPrinter();
         this.computerPlayer = computerPlayer;
@@ -44,7 +50,7 @@ public class Game {
         System.out.println("Rush Hour - human vs computer");
         System.out.println("Your hero: " + humanHeroId + " -> right exit");
         System.out.println("Computer hero: " + computerHeroId + " -> left exit");
-        System.out.println("You move first. Each player may move any vehicle.");
+        System.out.println("Each player may move any vehicle.");
         showHelp();
         printer.print(board);
 
@@ -53,8 +59,13 @@ public class Game {
                 System.out.println("No legal moves remain. Draw.");
                 break;
             }
+
+            if (turn == Turn.COMPUTER) {
+                playComputerTurn();
+                turn = Turn.HUMAN;
+                continue;
+            }
             System.out.print("Your turn > ");
-            // End of input (for example Ctrl+D) also ends the program safely.
             if (!input.hasNextLine()) {
                 break;
             }
@@ -76,10 +87,10 @@ public class Game {
             } else if (command.equalsIgnoreCase("help")) {
                 showHelp();
             } else if (command.equalsIgnoreCase("save")) {
-                if (parts.length == 1) {
-                    handleSave();
+                if (parts.length == 2) {
+                    handleSave(parts[1]);
                 } else {
-                    System.out.println("Usage: save");
+                    System.out.println("Usage: save <username>");
                 }
             } else if (command.equalsIgnoreCase("highscore")) {
                 if (parts.length == 1) {
@@ -90,7 +101,7 @@ public class Game {
             } else if (command.equalsIgnoreCase("move")) {
                 boolean moved = handleMove(parts);
                 if (moved && board.getWinner() == null) {
-                    playComputerTurn();
+                    turn = Turn.COMPUTER;
                 }
             } else {
                 System.out.println("Unknown command. Type help.");
@@ -118,18 +129,26 @@ public class Game {
         System.out.println("Positive steps: right/down. Negative steps: left/up.");
         System.out.println("Example: move A 2. Vehicle IDs are case-sensitive.");
         System.out.println("To win, move the entire hero out through its own exit in one move.");
-        System.out.println("save - Save current game to save.txt");
+        System.out.println("save + username - Save current game.");
         System.out.println("Commands: show | move <id> <steps> | save | highscore | help | quit");
     }
 
-    private void handleSave() {
+    private void handleSave(String name) {
+        if (!name.matches("[a-zA-Z0-9_-]+")) {
+            System.out.println("Invalid save name.");
+            return;
+        }
+
+        String path = "saves/" + name + ".txt";
+
         try {
-            GameFactory.saveBoard(board, "save.txt");
+            GameFactory.saveBoard(board, turn, path);
             System.out.println("Game saved successfully.");
         } catch (IOException e) {
             System.out.println("Cannot save game: " + e.getMessage());
         }
     }
+
 
     private boolean handleMove(String[] parts) {
         if (parts.length != 3) {

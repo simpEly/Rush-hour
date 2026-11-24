@@ -1,7 +1,7 @@
 package org.example;
 
 import org.example.database.PlayerRepository;
-import org.example.model.Board;
+import org.example.model.SavedGame;
 import org.example.service.Game;
 import org.example.service.LevelSelector;
 
@@ -24,9 +24,9 @@ public class Main {
 
         repository.showHighScores();
 
-        Board board = LevelSelector.selectBoard(scanner);
+        SavedGame savedgame = LevelSelector.selectGame(scanner);
 
-        Game game = new Game(board, scanner, playerName, repository);
+        Game game = new Game(savedgame, scanner, playerName, repository);
         game.start();
     }
 }

@@ -1,5 +1,8 @@
 package org.example.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -9,6 +12,8 @@ import org.example.model.Orientation;
 import org.example.model.Vehicle;
 
 public class ComputerPlayer {
+    private static final Logger logger = LoggerFactory.getLogger(ComputerPlayer.class);
+
     private final Random random;
 
     public ComputerPlayer() {
@@ -27,12 +32,15 @@ public class ComputerPlayer {
             }
         }
         if (movableVehicles.isEmpty()) {
+            logger.debug("Computer found no legal move");
             return null;
         }
 
         Vehicle vehicle = movableVehicles.get(random.nextInt(movableVehicles.size()));
         List<Integer> steps = findLegalSteps(board, vehicle);
         int chosenSteps = steps.get(random.nextInt(steps.size()));
+        logger.debug("Computer selected {} by {} steps from {} movable vehicles and {} legal steps for that vehicle",
+                vehicle.getId(), chosenSteps, movableVehicles.size(), steps.size());
         return new Move(vehicle, chosenSteps);
     }
 

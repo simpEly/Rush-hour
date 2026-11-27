@@ -41,3 +41,7 @@ build/
 /rushhour.db
 /.idea/dataSources.xml
 /.idea/data_source_mapping.xml
+
+# Runtime logs
+*.log
+/logs/

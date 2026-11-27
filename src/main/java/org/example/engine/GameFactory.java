@@ -1,5 +1,8 @@
 package org.example.engine;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 import org.example.model.*;
 import java.io.BufferedReader;
@@ -9,6 +12,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class GameFactory {
+    private static final Logger logger = LoggerFactory.getLogger(GameFactory.class);
+
     public static Board createDefaultBoard() {
         Board board = new Board(6, 6);
         board.addVehicle(new Vehicle(
@@ -180,6 +185,7 @@ public class GameFactory {
             }
         }
 
+        logger.info("Loaded game data from {}", path);
         return new SavedGame(board, turn);
     }
 
@@ -222,6 +228,7 @@ public class GameFactory {
         }
 
         Files.writeString(savePath, content);
+        logger.info("Saved game data to {}", savePath);
     }
 
 

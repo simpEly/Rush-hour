@@ -1,9 +1,14 @@
 package org.example.database;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.file.Path;
 import java.sql.*;
 
 public class PlayerRepository {
+    private static final Logger logger = LoggerFactory.getLogger(PlayerRepository.class);
+
 
     private final String url;
 
@@ -28,9 +33,11 @@ public class PlayerRepository {
              Statement statement = connection.createStatement()) {
 
             statement.executeUpdate(sql);
+            logger.info("Player database initialized");
             System.out.println("Database initialized successfully.");
 
         } catch (SQLException e) {
+            logger.error("Could not initialize player database", e);
             System.out.println("Database error: " + e.getMessage());
         }
     }
@@ -49,9 +56,11 @@ public class PlayerRepository {
             statement.setString(1, playerName);
             statement.executeUpdate();
 
+            logger.info("Player win recorded");
             System.out.println("Win recorded for " + playerName);
 
         } catch (SQLException e) {
+            logger.error("Could not record player win", e);
             System.out.println("Database error: " + e.getMessage());
         }
     }
@@ -79,6 +88,7 @@ public class PlayerRepository {
             }
 
         } catch (SQLException e) {
+            logger.error("Could not read high scores", e);
             System.out.println("Database error: " + e.getMessage());
         }
     }

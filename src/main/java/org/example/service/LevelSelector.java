@@ -63,7 +63,7 @@ public class LevelSelector {
     }
 
     private static SavedGame handleLoadLevel(int level, Scanner scanner) {
-        String path = "list of level/level" + level + ".txt";
+        String path = "List of level/level" + level + ".txt";
 
         try {
             return GameFactory.loadGameFromFile(path);

@@ -99,7 +99,7 @@ public class BoardTest {
         assertTrue(board.addVehicle(car));
         assertTrue(board.addVehicle(blocker));
 
-        // Đích ở cột 4–5 trống, nhưng đường đi qua cột 3 bị chắn.
+        // The destination is empty, but the path crosses the blocker.
         assertFalse(board.moveVehicle(car, 4));
 
         assertEquals(new Position(2, 0), car.getPosition());
@@ -178,4 +178,46 @@ public class BoardTest {
         assertNull(board.getVehicle("C"));
     }
 
+    @Test
+    void shouldAcceptLastCellAndRejectPositionsBeyondEachEdge() {
+        Board board = new Board(3, 5);
+
+        assertTrue(board.isInside(new Position(2, 4)));
+        assertFalse(board.isInside(new Position(3, 4)));
+        assertFalse(board.isInside(new Position(2, 5)));
+        assertFalse(board.isInside(new Position(-1, 4)));
+        assertFalse(board.isInside(new Position(2, -1)));
+    }
+
+    @Test
+    void shouldRejectVerticalMovesThatCrossAnOccupiedCellInEitherDirection() {
+        Board board = new Board(7, 3);
+        Vehicle top = new Vehicle("T", 2, Orientation.vertical, new Position(0, 1), false);
+        Vehicle bottom = new Vehicle("B", 2, Orientation.vertical, new Position(5, 1), false);
+        Vehicle blocker = new Vehicle("C", 2, Orientation.horizontal, new Position(3, 0), false);
+        assertTrue(board.addVehicle(top));
+        assertTrue(board.addVehicle(bottom));
+        assertTrue(board.addVehicle(blocker));
+
+        assertFalse(board.moveVehicle(top, 4));
+        assertFalse(board.moveVehicle(bottom, -4));
+        assertEquals(new Position(0, 1), top.getPosition());
+        assertEquals(new Position(5, 1), bottom.getPosition());
+        assertSame(blocker, board.getVehicleAt(new Position(3, 1)));
+    }
+
+    @Test
+    void shouldRejectMovementOfADifferentInstanceWithTheSameId() {
+        Board board = new Board(3, 5);
+        Position start = new Position(1, 1);
+        Vehicle registered = new Vehicle("A", 2, Orientation.horizontal, start, false);
+        Vehicle duplicate = new Vehicle("A", 2, Orientation.horizontal, start, false);
+        assertTrue(board.addVehicle(registered));
+
+        assertFalse(board.canMoveVehicle(duplicate, 1));
+        assertFalse(board.moveVehicle(duplicate, 1));
+        assertTrue(board.canMoveVehicle(registered, 1));
+        assertEquals(start, registered.getPosition());
+        assertEquals(start, duplicate.getPosition());
+    }
 }

@@ -3,6 +3,9 @@ package org.example.service;
 import java.io.IOException;
 import java.util.Scanner;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.example.engine.GameFactory;
 import org.example.model.Board;
 import org.example.model.Move;
@@ -22,6 +25,8 @@ public class Game {
     private final ComputerPlayer computerPlayer;
     private final String playerName;
     private final PlayerRepository repository;
+    private static final Logger logger =
+            LoggerFactory.getLogger(Game.class);
 
 
 
@@ -47,6 +52,7 @@ public class Game {
 
 
     public void start() {
+        logger.info("Game started");
         System.out.println("Rush Hour - human vs computer");
         System.out.println("Your hero: " + humanHeroId + " -> right exit");
         System.out.println("Computer hero: " + computerHeroId + " -> left exit");
@@ -145,14 +151,17 @@ public class Game {
             GameFactory.saveBoard(board, turn, path);
             System.out.println("Game saved successfully.");
         } catch (IOException e) {
-            System.out.println("Cannot save game: " + e.getMessage());
+            logger.error("Failed to save game", e);
         }
     }
 
 
     private boolean handleMove(String[] parts) {
         if (parts.length != 3) {
-            System.out.println("Usage: move <id> <steps>");
+            logger.debug("Invalid move command: {}",
+                    String.join(" ", parts));
+
+            System.out.println("Usage: move <vehicle> <steps>");
             return false;
         }
 
@@ -160,6 +169,7 @@ public class Game {
         try {
             steps = Integer.parseInt(parts[2]);
         } catch (NumberFormatException exception) {
+            logger.debug("Invalid step format: {}", parts[2]);
             System.out.println("Steps must be a whole number within the integer range.");
             return false;
         }
@@ -171,13 +181,18 @@ public class Game {
         }
         if (!board.moveVehicle(vehicle, steps)) {
             if (board.isIncompleteExit(vehicle, steps)) {
+                logger.debug("Human move rejected: vehicle {}, steps {}",
+                        vehicle.getId(), steps);
                 System.out.println("Vehicle must exit the board completely.");
             } else {
+                logger.debug("Human move rejected: vehicle {}, steps {}",
+                        vehicle.getId(), steps);
                 System.out.println("Invalid move: blocked, outside board, or zero steps.");
             }
             return false;
         }
-
+        logger.info("Human moved vehicle {} by {} steps",
+                vehicle.getId(), steps);
         System.out.println("Moved " + vehicle.getId() + ".");
         printer.print(board);
         return true;

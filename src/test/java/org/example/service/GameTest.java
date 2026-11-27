@@ -303,4 +303,61 @@ class GameTest {
         assertEquals(1, computer.turnCount);
         assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
     }
+    @Test
+    void shouldKeepHumanTurnAfterPartialExitAndEndOnCompleteExit() {
+        Board board = new Board(1, 6);
+        Vehicle hero = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 4), true);
+        assertTrue(board.addVehicle(hero));
+        board.addExit(new Exit("A", 0, true));
+        PredictableComputer computer = new PredictableComputer();
+
+        try (var input = new Scanner("move A 1\nmove A 2\nshow\n")) {
+            new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository)
+                    .start();
+
+            assertSame(hero, board.getWinner());
+            assertEquals(0, computer.turnCount);
+            assertEquals("show", input.nextLine());
+            verify(repository).addWin(PLAYER);
+        }
+    }
+
+    @Test
+    void shouldSaveUpdatedBoardWithHumanTurnAfterComputerMoves() {
+        Board board = createBoard();
+        PredictableComputer computer = new PredictableComputer();
+
+        try (var factory = mockStatic(GameFactory.class);
+             var input = new Scanner("move A 1\nsave next_turn\nquit\n")) {
+            factory.when(() -> GameFactory.saveBoard(board, Turn.HUMAN, "saves/next_turn.txt"))
+                    .thenAnswer(call -> {
+                        assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
+                        assertEquals(new Position(1, 4), board.getVehicle("B").getPosition());
+                        return null;
+                    });
+
+            new Game(new SavedGame(board, Turn.HUMAN), input, computer, PLAYER, repository)
+                    .start();
+
+            factory.verify(() -> GameFactory.saveBoard(board, Turn.HUMAN, "saves/next_turn.txt"));
+            assertEquals(1, computer.turnCount);
+        }
+    }
+
+    @Test
+    void shouldReturnControlToHumanWhenComputerReturnsNoMove() {
+        Board board = createBoard();
+        ComputerPlayer computer = mock(ComputerPlayer.class);
+        when(computer.hasLegalMove(board)).thenReturn(true);
+
+        try (var input = new Scanner("move A 1\nquit\n")) {
+            new Game(new SavedGame(board, Turn.COMPUTER), input, computer, PLAYER, repository)
+                    .start();
+
+            assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
+            assertEquals(new Position(0, 4), board.getVehicle("B").getPosition());
+            verify(computer, times(2)).chooseMove(board);
+            verifyNoInteractions(repository);
+        }
+    }
 }

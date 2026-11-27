@@ -17,11 +17,11 @@ class LevelSelectorTest {
         SavedGame level = new SavedGame(GameFactory.createDefaultBoard(), Turn.HUMAN);
         try (var factory = mockStatic(GameFactory.class);
              var input = new Scanner("text\n-1\n7\n3\n")) {
-            factory.when(() -> GameFactory.loadGameFromFile("list of level/level3.txt"))
+            factory.when(() -> GameFactory.loadGameFromFile("List of level/level3.txt"))
                     .thenReturn(level);
 
             assertSame(level, LevelSelector.selectGame(input));
-            factory.verify(() -> GameFactory.loadGameFromFile("list of level/level3.txt"));
+            factory.verify(() -> GameFactory.loadGameFromFile("List of level/level3.txt"));
             factory.verifyNoMoreInteractions();
         }
     }
@@ -48,7 +48,7 @@ class LevelSelectorTest {
     void shouldOfferDefaultAfterLevelFailsAndRejectInvalidFallbackChoice() {
         try (var factory = mockStatic(GameFactory.class);
              var input = new Scanner("1\ninvalid\n1\n")) {
-            factory.when(() -> GameFactory.loadGameFromFile("list of level/level1.txt"))
+            factory.when(() -> GameFactory.loadGameFromFile("List of level/level1.txt"))
                     .thenThrow(new IllegalArgumentException("invalid level"));
             factory.when(GameFactory::createDefaultBoard).thenCallRealMethod();
 
@@ -65,14 +65,14 @@ class LevelSelectorTest {
         SavedGame level = new SavedGame(GameFactory.createDefaultBoard(), Turn.HUMAN);
         try (var factory = mockStatic(GameFactory.class);
              var input = new Scanner("1\n2\n6\n")) {
-            factory.when(() -> GameFactory.loadGameFromFile("list of level/level1.txt"))
+            factory.when(() -> GameFactory.loadGameFromFile("List of level/level1.txt"))
                     .thenThrow(new IOException("missing level"));
-            factory.when(() -> GameFactory.loadGameFromFile("list of level/level6.txt"))
+            factory.when(() -> GameFactory.loadGameFromFile("List of level/level6.txt"))
                     .thenReturn(level);
 
             assertSame(level, LevelSelector.selectGame(input));
-            factory.verify(() -> GameFactory.loadGameFromFile("list of level/level1.txt"));
-            factory.verify(() -> GameFactory.loadGameFromFile("list of level/level6.txt"));
+            factory.verify(() -> GameFactory.loadGameFromFile("List of level/level1.txt"));
+            factory.verify(() -> GameFactory.loadGameFromFile("List of level/level6.txt"));
             factory.verifyNoMoreInteractions();
         }
     }

@@ -20,10 +20,12 @@ class ExitTest {
         assertEquals(new Position(2, 4), hero.getPosition());
         assertNull(board.getWinner());
 
+        assertTrue(board.isIncompleteExit(hero, 1));
         assertFalse(board.moveVehicle(hero, 1));
         assertEquals(new Position(2, 4), hero.getPosition());
         assertNull(board.getWinner());
 
+        assertFalse(board.isIncompleteExit(hero, 2));
         assertTrue(board.moveVehicle(hero, 2));
         assertSame(hero, board.getWinner());
         assertNull(board.getVehicle("A"));
@@ -48,6 +50,12 @@ class ExitTest {
 
         assertFalse(board.moveVehicle(otherHero, 3));
         assertNull(board.getWinner());
+        assertTrue(board.isIncompleteExit(otherHero, -4));
+        assertFalse(board.moveVehicle(otherHero, -4));
+        assertEquals(new Position(4, 3), otherHero.getPosition());
+        assertNull(board.getWinner());
+
+        assertFalse(board.isIncompleteExit(otherHero, -5));
         assertTrue(board.moveVehicle(otherHero, -5));
         assertSame(otherHero, board.getWinner());
         assertNotNull(board.getVehicle("A"));
@@ -57,6 +65,7 @@ class ExitTest {
     void shouldRejectExitThroughWrongSide() {
         Board board = createBoard();
         Vehicle hero = board.getVehicle("A");
+        assertFalse(board.isIncompleteExit(hero, -2));
         assertFalse(board.moveVehicle(hero, -3));
         assertEquals(new Position(2, 1), hero.getPosition());
         assertNull(board.getWinner());

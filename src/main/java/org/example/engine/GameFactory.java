@@ -28,8 +28,8 @@ public class GameFactory {
         board.addVehicle(new Vehicle(
                 "D", 3, Orientation.vertical, new Position(3, 1), false
         ));
-        board.addExit(new Exit("A", 2, true));
-        board.addExit(new Exit("B", 4, false));
+        board.addExit(new Exit("A", 2, ExitDirection.RIGHT));
+        board.addExit(new Exit("B", 4, ExitDirection.LEFT));
         return board;
     }
 
@@ -127,19 +127,9 @@ public class GameFactory {
                         }
 
                         String vehicleId = parts[1];
-                        int exitRow = Integer.parseInt(parts[2]);
-
-                        boolean rightSide;
-
-                        if (parts[3].equals("RIGHT")) {
-                            rightSide = true;
-                        } else if (parts[3].equals("LEFT")) {
-                            rightSide = false;
-                        } else {
-                            throw new IllegalArgumentException("Invalid exit side");
-                        }
-
-                        board.addExit(new Exit(vehicleId, exitRow, rightSide));
+                        int coordinate = Integer.parseInt(parts[2]);
+                        ExitDirection direction = ExitDirection.valueOf(parts[3]);
+                        board.addExit(new Exit(vehicleId, coordinate, direction));
                         break;
 
                     default:
@@ -216,8 +206,8 @@ public class GameFactory {
         for (Exit exit : board.getExits()) {
             content += "EXIT "
                     + exit.getVehicleId() + " "
-                    + exit.getRow() + " "
-                    + (exit.isRightSide() ? "RIGHT" : "LEFT") + "\n";
+                    + exit.getCoordinate() + " "
+                    + exit.getDirection() + "\n";
         }
 
         Path savePath = Path.of(path);

@@ -16,7 +16,7 @@ class LevelSelectorTest {
     void shouldRetryInvalidChoicesThenReturnSelectedLevel() throws IOException {
         SavedGame level = new SavedGame(GameFactory.createDefaultBoard(), Turn.HUMAN);
         try (var factory = mockStatic(GameFactory.class);
-             var input = new Scanner("text\n-1\n7\n3\n")) {
+             var input = new Scanner("text\n-1\n10\n3\n")) {
             factory.when(() -> GameFactory.loadGameFromFile("List of level/level3.txt"))
                     .thenReturn(level);
 
@@ -74,6 +74,17 @@ class LevelSelectorTest {
             factory.verify(() -> GameFactory.loadGameFromFile("List of level/level1.txt"));
             factory.verify(() -> GameFactory.loadGameFromFile("List of level/level6.txt"));
             factory.verifyNoMoreInteractions();
+        }
+    }
+
+    @Test
+    void shouldSelectLastBundledLevelByNumber() {
+        try (var input = new Scanner("9\n")) {
+            SavedGame selected = LevelSelector.selectGame(input);
+
+            assertEquals(Turn.HUMAN, selected.turn());
+            assertEquals(8, selected.board().getColumn());
+            assertEquals(2, selected.board().getExits().size());
         }
     }
 }

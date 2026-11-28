@@ -8,6 +8,7 @@ import org.example.model.Turn;
 import org.example.database.PlayerRepository;
 import org.example.model.Board;
 import org.example.model.Exit;
+import org.example.model.ExitDirection;
 import org.example.model.Move;
 import org.example.model.Orientation;
 import org.example.model.Position;
@@ -138,7 +139,7 @@ class GameTest {
     @Test
     void shouldStopReadingCommandsWhenHeroWins() {
         Board board = createBoard();
-        board.addExit(new Exit("A", 2, true));
+        board.addExit(new Exit("A", 2, ExitDirection.RIGHT));
         assertTrue(board.moveVehicle(board.getVehicle("B"), 3));
         Scanner input = new Scanner("move A 5\nmove B -1\n");
         Vehicle hero = board.getVehicle("A");
@@ -158,8 +159,8 @@ class GameTest {
         Vehicle computerHero = new Vehicle("B", 2, Orientation.horizontal, new Position(4, 1), true);
         assertTrue(board.addVehicle(humanHero));
         assertTrue(board.addVehicle(computerHero));
-        board.addExit(new Exit("A", 2, true));
-        board.addExit(new Exit("B", 4, false));
+        board.addExit(new Exit("A", 2, ExitDirection.RIGHT));
+        board.addExit(new Exit("B", 4, ExitDirection.LEFT));
         Scanner input = new Scanner("move B -3\nmove A 1\n");
 
         new Game(new SavedGame(board, Turn.HUMAN), input, new PredictableComputer(), PLAYER, repository).start();
@@ -190,7 +191,7 @@ class GameTest {
         Board board = new Board(1, 6);
         Vehicle hero = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 0), true);
         board.addVehicle(hero);
-        board.addExit(new Exit("A", 0, true));
+        board.addExit(new Exit("A", 0, ExitDirection.RIGHT));
         PredictableComputer computer = new PredictableComputer();
 
         new Game(new SavedGame(board, Turn.HUMAN), new Scanner("move A 6\n"), computer, PLAYER, repository).start();
@@ -210,8 +211,8 @@ class GameTest {
         Vehicle machine = new Vehicle("B", 2, Orientation.horizontal, new Position(1, 1), true);
         board.addVehicle(human);
         board.addVehicle(machine);
-        board.addExit(new Exit("A", 0, true));
-        board.addExit(new Exit("B", 1, false));
+        board.addExit(new Exit("A", 0, ExitDirection.RIGHT));
+        board.addExit(new Exit("B", 1, ExitDirection.LEFT));
         ComputerPlayer computer = new ComputerPlayer() {
             @Override
             public Move chooseMove(Board currentBoard) {
@@ -308,7 +309,7 @@ class GameTest {
         Board board = new Board(1, 6);
         Vehicle hero = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 4), true);
         assertTrue(board.addVehicle(hero));
-        board.addExit(new Exit("A", 0, true));
+        board.addExit(new Exit("A", 0, ExitDirection.RIGHT));
         PredictableComputer computer = new PredictableComputer();
 
         try (var input = new Scanner("move A 1\nmove A 2\nshow\n")) {
@@ -357,6 +358,22 @@ class GameTest {
             assertEquals(new Position(2, 2), board.getVehicle("A").getPosition());
             assertEquals(new Position(0, 4), board.getVehicle("B").getPosition());
             verify(computer, times(2)).chooseMove(board);
+            verifyNoInteractions(repository);
+        }
+    }
+
+    @Test
+    void shouldEndGameWhenComputerHeroTakesVerticalExit() {
+        Board board = new Board(2, 5);
+        Vehicle hero = new Vehicle("B", 2, Orientation.vertical, new Position(0, 4), true);
+        assertTrue(board.addVehicle(hero));
+        board.addExit(new Exit("B", 4, ExitDirection.TOP));
+
+        try (var input = new Scanner("show\n")) {
+            new Game(new SavedGame(board, Turn.COMPUTER), input, PLAYER, repository).start();
+
+            assertSame(hero, board.getWinner());
+            assertEquals("show", input.nextLine());
             verifyNoInteractions(repository);
         }
     }

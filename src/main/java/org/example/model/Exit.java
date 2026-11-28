@@ -1,29 +1,29 @@
 package org.example.model;
 
-/** A dedicated left or right exit for a horizontal hero vehicle. */
+/** A hero's dedicated exit. The coordinate is a row for LEFT/RIGHT or a column for TOP/BOTTOM. */
 public class Exit {
     private final String vehicleId;
-    private final int row;
-    private final boolean rightSide;
+    private final int coordinate;
+    private final ExitDirection direction;
 
-    public Exit(String vehicleId, int row, boolean rightSide) {
-        if (vehicleId == null || vehicleId.isBlank() || row < 0) {
-            throw new IllegalArgumentException("Exit requires a vehicle ID and a valid row");
+    public Exit(String vehicleId, int coordinate, ExitDirection direction) {
+        if (vehicleId == null || vehicleId.isBlank() || coordinate < 0 || direction == null) {
+            throw new IllegalArgumentException("Exit requires a vehicle ID, coordinate and direction");
         }
         this.vehicleId = vehicleId;
-        this.row = row;
-        this.rightSide = rightSide;
+        this.coordinate = coordinate;
+        this.direction = direction;
     }
 
     public String getVehicleId() {
         return vehicleId;
     }
 
-    public int getRow() {
-        return row;
+    public int getCoordinate() {
+        return coordinate;
     }
 
-    public boolean isRightSide() {
-        return rightSide;
+    public ExitDirection getDirection() {
+        return direction;
     }
 }

@@ -54,8 +54,8 @@ public class Game {
     public void start() {
         logger.info("Game started");
         System.out.println("Rush Hour - human vs computer");
-        System.out.println("Your hero: " + humanHeroId + " -> right exit");
-        System.out.println("Computer hero: " + computerHeroId + " -> left exit");
+        System.out.println("Your hero: " + humanHeroId);
+        System.out.println("Computer hero: " + computerHeroId);
         System.out.println("Each player may move any vehicle.");
         showHelp();
         printer.print(board);

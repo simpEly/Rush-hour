@@ -14,7 +14,7 @@ public class LevelSelector {
 
 
     public static SavedGame selectGame(Scanner scanner) {
-        int levelCount = 6;
+        int levelCount = 9;
         SavedGame savedGame = null;
 
         while (savedGame == null) {

@@ -3,11 +3,14 @@ package org.example.service;
 import java.util.Random;
 import org.example.model.Board;
 import org.example.model.Exit;
+import org.example.model.ExitDirection;
 import org.example.model.Move;
 import org.example.model.Orientation;
 import org.example.model.Position;
 import org.example.model.Vehicle;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ComputerPlayerTest {
@@ -27,7 +30,7 @@ class ComputerPlayerTest {
         Board board = new Board(1, 2);
         Vehicle hero = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 0), true);
         board.addVehicle(hero);
-        board.addExit(new Exit("A", 0, true));
+        board.addExit(new Exit("A", 0, ExitDirection.RIGHT));
 
         Move move = new ComputerPlayer(new Random(1)).chooseMove(board);
 
@@ -46,7 +49,7 @@ class ComputerPlayerTest {
         Board board = new Board(1, 2);
         Vehicle hero = new Vehicle("B", 2, Orientation.horizontal, new Position(0, 0), true);
         board.addVehicle(hero);
-        board.addExit(new Exit("B", 0, false));
+        board.addExit(new Exit("B", 0, ExitDirection.LEFT));
 
         Move move = new ComputerPlayer(new Random(2)).chooseMove(board);
 
@@ -107,11 +110,30 @@ class ComputerPlayerTest {
         Board board = new Board(1, 2);
         Vehicle hero = new Vehicle("A", 2, Orientation.horizontal, new Position(0, 0), true);
         board.addVehicle(hero);
-        board.addExit(new Exit("A", 0, true));
+        board.addExit(new Exit("A", 0, ExitDirection.RIGHT));
         assertTrue(board.moveVehicle(hero, 2));
 
         ComputerPlayer computer = new ComputerPlayer();
         assertNull(computer.chooseMove(board));
         assertFalse(computer.hasLegalMove(board));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"TOP, -2", "BOTTOM, 2"})
+    void shouldDiscoverAndApplyComputerHeroVerticalExit(ExitDirection direction, int steps) {
+        Board board = new Board(2, 5);
+        Vehicle hero = new Vehicle("B", 2, Orientation.vertical, new Position(0, 4), true);
+        assertTrue(board.addVehicle(hero));
+        board.addExit(new Exit("B", 4, direction));
+        ComputerPlayer computer = new ComputerPlayer(new Random(1));
+
+        assertTrue(computer.hasLegalMove(board));
+        Move move = computer.chooseMove(board);
+        assertNotNull(move);
+        assertSame(hero, move.getVehicle());
+        assertEquals(steps, move.getSteps());
+        assertNull(board.getWinner());
+        assertTrue(board.moveVehicle(move.getVehicle(), move.getSteps()));
+        assertSame(hero, board.getWinner());
     }
 }

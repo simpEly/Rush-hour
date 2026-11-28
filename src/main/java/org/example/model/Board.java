@@ -125,62 +125,53 @@ public class Board {
         if (winner != null || vehicle == null || getVehicle(vehicle.getId()) != vehicle) {
             return false;
         }
-        if (steps == 0) return false;
-        int row =  vehicle.getPosition().getRow();
-        int column = vehicle.getPosition().getColumn();
-        int length = vehicle.getLength();
-        // Check the destination first, including very large input values.
+        if (steps == 0) {
+            return false;
+        }
+
+        Position current = vehicle.getPosition();
         boolean vertical = vehicle.getOrientation() == Orientation.vertical;
-        long destination = (long) (vertical ? row : column) + steps;
-        int limit = vertical ? this.row : this.column;
-        if (destination < 0 || destination + length > limit) {
-            return canExit(vehicle, steps, destination);
-        }
-        if (vehicle.getOrientation() == Orientation.vertical) {
-            for (int i = 0; i < Math.abs(steps); i++) {
-                if (steps > 0) {
-                    Position position = new Position(row + length + i, column);
-                    if (isOccupied(position) || !isInside(position)) {
-                        return false;
-                    }
-                }
-                else {
-                    Position position = new Position(row - i - 1, column);
-                    if (isOccupied(position) || !isInside(position))    {
-                        return false;
-                    }
-                }
-            }
+        int start = vertical ? current.getRow() : current.getColumn();
+        int lane = vertical ? current.getColumn() : current.getRow();
+        int limit = vertical ? row : column;
+        int length = vehicle.getLength();
+        int sign = Integer.signum(steps);
+        long destination = (long) start + steps;
+        long end = destination + length;
+        boolean leavesBoard = destination < 0 || end > limit;
 
-        }
-        else {
-            for (int i = 0; i < Math.abs(steps); i++) {
-                if (steps > 0) {
-                    Position position = new Position(row, column + length + i);
-                    if (isOccupied(position) || !isInside(position)) {
-                        return false;
-                    }
-                }
-                else {
-                    Position position = new Position(row, column - i - 1);
-                    if (isOccupied(position) || !isInside(position)) {
-                        return false;
-                    }
-                }
+        if (leavesBoard) {
+            Exit exit = findMatchingExit(vehicle);
+            boolean completelyOutside = sign > 0 ? destination >= limit : end <= 0;
+            if (exit == null || exit.getDirection().getStepSign() != sign || !completelyOutside) {
+                return false;
             }
         }
 
+        // Check only newly crossed cells, stopping at the edge for an exit move.
+        int first = sign > 0 ? start + length : start - 1;
+        int last = sign > 0 ? (int) Math.min(end - 1, limit - 1) : (int) Math.max(destination, 0);
+        for (int cell = first; sign > 0 ? cell <= last : cell >= last; cell += sign) {
+            Position position = vertical ? new Position(cell, lane) : new Position(lane, cell);
+            if (isOccupied(position)) {
+                return false;
+            }
+        }
         return true;
     }
 
     public void addExit(Exit exit) {
-        if (exit == null || exit.getRow() < 0 || exit.getRow() >= row || winner != null) {
+        if (exit == null || winner != null) {
             throw new IllegalArgumentException("Invalid exit configuration");
         }
+        boolean vertical = exit.getDirection().getOrientation() == Orientation.vertical;
+        int laneCount = vertical ? column : row;
+        if (exit.getCoordinate() >= laneCount) {
+            throw new IllegalArgumentException("Exit coordinate is outside the board");
+        }
         Vehicle hero = getVehicle(exit.getVehicleId());
-        if (hero == null || !hero.isHero() || hero.getOrientation() != Orientation.horizontal
-                || hero.getPosition().getRow() != exit.getRow()) {
-            throw new IllegalArgumentException("Exit must match a horizontal hero on its row");
+        if (hero == null || !hero.isHero() || !matchesExit(hero, exit)) {
+            throw new IllegalArgumentException("Exit must match its hero's orientation and lane");
         }
         for (Exit existing : exits) {
             if (existing.getVehicleId().equals(exit.getVehicleId())) {
@@ -198,66 +189,39 @@ public class Board {
         return winner;
     }
 
-    private boolean canExit(Vehicle vehicle, int steps, long destination) {
-        if (!vehicle.isHero() || vehicle.getOrientation() != Orientation.horizontal) {
-            return false;
+    private Exit findMatchingExit(Vehicle vehicle) {
+        if (vehicle == null || !vehicle.isHero()) {
+            return null;
         }
         for (Exit exit : exits) {
-            if (!exit.getVehicleId().equals(vehicle.getId())
-                    || exit.getRow() != vehicle.getPosition().getRow()) {
-                continue;
+            if (exit.getVehicleId().equals(vehicle.getId()) && matchesExit(vehicle, exit)) {
+                return exit;
             }
-            boolean right = exit.isRightSide();
-            // Exit is one complete move: the entire vehicle must leave the board.
-            if (right && (steps <= 0 || destination < column)) {
-                return false;
-            }
-            if (!right && (steps >= 0 || destination + vehicle.getLength() > 0)) {
-                return false;
-            }
-
-            int direction = right ? 1 : -1;
-            int nextColumn = right
-                    ? vehicle.getPosition().getColumn() + vehicle.getLength()
-                    : vehicle.getPosition().getColumn() - 1;
-            // Check every cell between the front of the hero and its exit.
-            while (nextColumn >= 0 && nextColumn < column) {
-                if (isOccupied(new Position(exit.getRow(), nextColumn))) {
-                    return false;
-                }
-                nextColumn += direction;
-            }
-            return true;
         }
-        return false;
+        return null;
     }
+
+    private boolean matchesExit(Vehicle vehicle, Exit exit) {
+        if (vehicle.getOrientation() != exit.getDirection().getOrientation()) {
+            return false;
+        }
+        Position position = vehicle.getPosition();
+        int lane = vehicle.getOrientation() == Orientation.vertical
+                ? position.getColumn() : position.getRow();
+        return lane == exit.getCoordinate();
+    }
+
     public boolean isIncompleteExit(Vehicle vehicle, int steps) {
-        if (vehicle == null || !vehicle.isHero()
-                || vehicle.getOrientation() != Orientation.horizontal) {
+        Exit exit = findMatchingExit(vehicle);
+        if (exit == null || exit.getDirection().getStepSign() != Integer.signum(steps)) {
             return false;
         }
 
-        long destination =
-                (long) vehicle.getPosition().getColumn() + steps;
-
-        for (Exit exit : exits) {
-            if (!exit.getVehicleId().equals(vehicle.getId())
-                    || exit.getRow() != vehicle.getPosition().getRow()) {
-                continue;
-            }
-
-            if (exit.isRightSide()) {
-                return steps > 0
-                        && destination < column
-                        && destination + vehicle.getLength() > column;
-            } else {
-                return steps < 0
-                        && destination < 0
-                        && destination + vehicle.getLength() > 0;
-            }
-        }
-
-        return false;
+        boolean vertical = vehicle.getOrientation() == Orientation.vertical;
+        int start = vertical ? vehicle.getPosition().getRow() : vehicle.getPosition().getColumn();
+        int limit = vertical ? row : column;
+        long destination = (long) start + steps;
+        long end = destination + vehicle.getLength();
+        return steps > 0 ? destination < limit && end > limit : destination < 0 && end > 0;
     }
-
 }

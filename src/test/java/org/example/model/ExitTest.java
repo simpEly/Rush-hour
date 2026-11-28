@@ -1,13 +1,15 @@
 package org.example.model;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ExitTest {
     private Board createBoard() {
         Board board = new Board(6, 6);
         board.addVehicle(new Vehicle("A", 2, Orientation.horizontal, new Position(2, 1), true));
-        board.addExit(new Exit("A", 2, true));
+        board.addExit(new Exit("A", 2, ExitDirection.RIGHT));
         return board;
     }
 
@@ -46,7 +48,7 @@ class ExitTest {
         Board board = createBoard();
         Vehicle otherHero = new Vehicle("B", 2, Orientation.horizontal, new Position(4, 3), true);
         assertTrue(board.addVehicle(otherHero));
-        board.addExit(new Exit("B", 4, false));
+        board.addExit(new Exit("B", 4, ExitDirection.LEFT));
 
         assertFalse(board.moveVehicle(otherHero, 3));
         assertNull(board.getWinner());
@@ -90,7 +92,7 @@ class ExitTest {
         Vehicle hero = new Vehicle("B", 2, Orientation.horizontal, new Position(2, 3), true);
         board.addVehicle(hero);
         board.addVehicle(new Vehicle("C", 2, Orientation.vertical, new Position(1, 1), false));
-        board.addExit(new Exit("B", 2, false));
+        board.addExit(new Exit("B", 2, ExitDirection.LEFT));
 
         assertFalse(board.moveVehicle(hero, -5));
         assertEquals(new Position(2, 3), hero.getPosition());
@@ -123,13 +125,13 @@ class ExitTest {
     void shouldRejectInvalidExitConfiguration() {
         Board board = createBoard();
         assertThrows(IllegalArgumentException.class, () -> board.addExit(null));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 2, false)));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 1, true)));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 6, true)));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("missing", 2, true)));
-        assertThrows(IllegalArgumentException.class, () -> new Exit("A", -1, true));
-        assertThrows(IllegalArgumentException.class, () -> new Exit("", 2, true));
-        assertThrows(IllegalArgumentException.class, () -> new Exit(null, 2, true));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 2, ExitDirection.LEFT)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 1, ExitDirection.RIGHT)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 6, ExitDirection.RIGHT)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("missing", 2, ExitDirection.RIGHT)));
+        assertThrows(IllegalArgumentException.class, () -> new Exit("A", -1, ExitDirection.RIGHT));
+        assertThrows(IllegalArgumentException.class, () -> new Exit("", 2, ExitDirection.RIGHT));
+        assertThrows(IllegalArgumentException.class, () -> new Exit(null, 2, ExitDirection.RIGHT));
     }
 
     @Test
@@ -137,8 +139,8 @@ class ExitTest {
         Board board = new Board(6, 6);
         board.addVehicle(new Vehicle("C", 2, Orientation.horizontal, new Position(0, 0), false));
         board.addVehicle(new Vehicle("D", 2, Orientation.vertical, new Position(2, 2), true));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("C", 0, true)));
-        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("D", 2, true)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("C", 0, ExitDirection.RIGHT)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("D", 2, ExitDirection.RIGHT)));
     }
 
     @Test
@@ -153,5 +155,79 @@ class ExitTest {
         assertEquals(new Position(0, 0), other.getPosition());
         assertFalse(board.addVehicle(new Vehicle("D", 2, Orientation.horizontal, new Position(4, 0), false)));
         assertSame(hero, board.getWinner());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"TOP, -2, -3, 5", "BOTTOM, 2, 3, -3"})
+    void shouldRequireCompleteVerticalExitOnDesignatedSide(
+            ExitDirection direction, int partial, int complete, int wrongSide) {
+        Board board = new Board(4, 7);
+        Position start = new Position(1, 5);
+        Vehicle hero = new Vehicle("A", 2, Orientation.vertical, start, true);
+        assertTrue(board.addVehicle(hero));
+        board.addExit(new Exit("A", 5, direction));
+
+        assertTrue(board.isIncompleteExit(hero, partial));
+        assertFalse(board.moveVehicle(hero, partial));
+        assertFalse(board.isIncompleteExit(hero, wrongSide));
+        assertFalse(board.moveVehicle(hero, wrongSide));
+        assertEquals(start, hero.getPosition());
+        assertNull(board.getWinner());
+
+        assertFalse(board.isIncompleteExit(hero, complete));
+        assertTrue(board.moveVehicle(hero, complete));
+        assertSame(hero, board.getWinner());
+        assertNull(board.getVehicle("A"));
+        assertFalse(board.isOccupied(start));
+        assertFalse(board.isOccupied(new Position(2, 5)));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"TOP, 0, -4", "BOTTOM, 4, 3"})
+    void shouldRejectBlockedVerticalExit(ExitDirection direction, int blockerRow, int steps) {
+        Board board = new Board(5, 7);
+        Position start = new Position(2, 5);
+        Vehicle hero = new Vehicle("A", 2, Orientation.vertical, start, true);
+        Vehicle blocker = new Vehicle("C", 2, Orientation.horizontal,
+                new Position(blockerRow, 4), false);
+        assertTrue(board.addVehicle(hero));
+        assertTrue(board.addVehicle(blocker));
+        board.addExit(new Exit("A", 5, direction));
+
+        assertFalse(board.moveVehicle(hero, steps));
+        assertEquals(start, hero.getPosition());
+        assertNull(board.getWinner());
+    }
+
+    @Test
+    void shouldRejectVerticalExitWithWrongColumnOrOrientation() {
+        Board board = new Board(4, 7);
+        assertTrue(board.addVehicle(new Vehicle("A", 2, Orientation.vertical,
+                new Position(1, 5), true)));
+        assertTrue(board.addVehicle(new Vehicle("B", 2, Orientation.horizontal,
+                new Position(0, 0), true)));
+
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 4, ExitDirection.TOP)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 7, ExitDirection.BOTTOM)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("A", 1, ExitDirection.LEFT)));
+        assertThrows(IllegalArgumentException.class, () -> board.addExit(new Exit("B", 0, ExitDirection.TOP)));
+        assertThrows(IllegalArgumentException.class, () -> new Exit("A", 5, null));
+        assertTrue(board.getExits().isEmpty());
+    }
+
+    @Test
+    void shouldRejectVerticalNonHeroAndHeroWithoutItsOwnExit() {
+        Board board = new Board(6, 4);
+        Vehicle hero = new Vehicle("A", 2, Orientation.vertical, new Position(3, 1), true);
+        Vehicle otherHero = new Vehicle("B", 2, Orientation.vertical, new Position(0, 1), true);
+        Vehicle car = new Vehicle("C", 2, Orientation.vertical, new Position(0, 2), false);
+        assertTrue(board.addVehicle(hero));
+        assertTrue(board.addVehicle(otherHero));
+        assertTrue(board.addVehicle(car));
+        board.addExit(new Exit("A", 1, ExitDirection.TOP));
+
+        assertFalse(board.moveVehicle(otherHero, -2));
+        assertFalse(board.moveVehicle(car, -2));
+        assertNull(board.getWinner());
     }
 }

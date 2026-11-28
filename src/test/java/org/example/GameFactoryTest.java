@@ -6,10 +6,13 @@ import java.nio.file.Path;
 import org.example.engine.GameFactory;
 import org.example.model.Board;
 import org.example.model.Exit;
+import org.example.model.ExitDirection;
 import org.example.model.Position;
 import org.example.model.Vehicle;
 import org.example.model.SavedGame;
 import org.example.model.Turn;
+import org.example.service.ComputerPlayer;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -89,8 +92,8 @@ class GameFactoryTest {
             Exit actual = restored.getExits().stream()
                     .filter(exit -> exit.getVehicleId().equals(expected.getVehicleId()))
                     .findFirst().orElseThrow();
-            assertEquals(expected.getRow(), actual.getRow());
-            assertEquals(expected.isRightSide(), actual.isRightSide());
+            assertEquals(expected.getCoordinate(), actual.getCoordinate());
+            assertEquals(expected.getDirection(), actual.getDirection());
         }
         assertTrue(restored.moveVehicle(restored.getVehicle("A"), 5));
         assertEquals("A", restored.getWinner().getId());
@@ -138,5 +141,49 @@ class GameFactoryTest {
         assertEquals(Turn.HUMAN, game.turn());
         assertEquals(12, game.board().getColumn());
         assertEquals(2, game.board().getExits().size());
+        assertTrue(game.board().getExits().stream()
+                .allMatch(exit -> exit.getDirection() == ExitDirection.LEFT
+                        || exit.getDirection() == ExitDirection.RIGHT));
+        assertTrue(new ComputerPlayer().hasLegalMove(game.board()));
+    }
+
+    @Test
+    void shouldRoundTripTopAndBottomExits() throws IOException {
+        Board board = GameFactory.loadGameFromFile("List of level/level9.txt").board();
+        Path saved = tempDir.resolve("vertical.txt");
+        GameFactory.saveBoard(board, Turn.COMPUTER, saved.toString());
+
+        String content = Files.readString(saved);
+        assertTrue(content.contains("EXIT A 2 TOP"));
+        assertTrue(content.contains("EXIT B 5 BOTTOM"));
+        SavedGame restored = GameFactory.loadGameFromFile(saved.toString());
+        assertEquals(Turn.COMPUTER, restored.turn());
+        Exit top = restored.board().getExits().get(0);
+        assertEquals(ExitDirection.TOP, top.getDirection());
+        assertEquals(2, top.getCoordinate());
+        Exit bottom = restored.board().getExits().get(1);
+        assertEquals(ExitDirection.BOTTOM, bottom.getDirection());
+        assertEquals(5, bottom.getCoordinate());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "7, A, C, -1, 8", "7, B, D, -2, -5",
+        "8, A, C, 2, 6",  "8, B, D, -1, -7",
+        "9, A, C, -1, -5", "9, B, D, 1, 6"
+    })
+    void shouldHaveIndependentWinningPathForEachHero(
+            int level, String heroId, String blockerId, int clearSteps, int exitSteps)
+            throws IOException {
+        SavedGame game = GameFactory.loadGameFromFile("List of level/level" + level + ".txt");
+        Board board = game.board();
+        Vehicle hero = board.getVehicle(heroId);
+
+        assertEquals(Turn.HUMAN, game.turn());
+        assertFalse(board.moveVehicle(hero, exitSteps));
+        assertNull(board.getWinner());
+        assertTrue(board.moveVehicle(board.getVehicle(blockerId), clearSteps));
+        assertTrue(board.moveVehicle(hero, exitSteps));
+        assertSame(hero, board.getWinner());
     }
 }

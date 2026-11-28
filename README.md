@@ -33,7 +33,7 @@ A parancsokat a Run ablakban lehet megadni.
 - Egy lépésben több mező is megtehető, ha a teljes út szabad.
 - A járművek nem fedhetik át és nem ugorhatják át egymást.
 - A semleges járművek nem hagyhatják el a táblát.
-- A céljármű csak a saját kijáratán keresztül, a megfelelő sorban és irányban
+- A céljármű csak a saját kijáratán keresztül, a megfelelő sorban vagy oszlopban és irányban
   hagyhatja el a táblát.
 - A jelenlegi megvalósításban a kijutást egyetlen lépésnek kell végrehajtania:
   a teljes céljárműnek el kell hagynia a táblát. A részleges kilógás nem megengedett.
@@ -110,7 +110,7 @@ emberi céljármű kijutását is elősegítheti. A lehetséges lépések vizsg�
 | `Vehicle` | Azonosító, hossz, irány, pozíció és céljárműjelző tárolása |
 | `Position` | Megváltoztathatatlan koordinátaérték `equals`, `hashCode` és `toString` metódussal |
 | `Orientation` | A vízszintes és függőleges irány felsorolása |
-| `Exit` | A kijárathoz rendelt céljármű, sor és oldal tárolása |
+| `Exit` | A kijárathoz rendelt céljármű, koordináta és irány tárolása |
 | `Move` | Egy jármű és a hozzá tartozó lépésszám tárolása |
 | `ComputerPlayer` | Véletlenszerű érvényes gépi lépés kiválasztása |
 | `BoardPrinter` | A tábla és a kijáratok konzolos megjelenítése |
@@ -147,12 +147,30 @@ A Maven-konfiguráció JaCoCo-jelentést készít, de jelenleg nem kényszeríti
 a 80%-os lefedettségi küszöböt. A Checkstyle-ellenőrzés külön paranccsal futtatható,
 nincs automatikusan a build életciklusához kötve.
 
-## Jelenlegi funkciók és korlátok
+## Saját pályák és kijáratok
 
-A megvalósítás tartalmazza a játékmodell osztályait, a parancssoros interakciót,
-a váltott emberi és gépi köröket, a véletlenszerű gépi ellenfelet, a bal és jobb
-oldali kijáratokat, valamint a győzelem és a lépés nélküli döntetlen felismerését.
+A játék a `List of level` mappában lévő 1–9. pályából enged választani.
+A 7. pályán A vízszintes, B függőleges, a 8. pályán A függőleges, B
+vízszintes, a 9. pályán pedig mindkét céljármű függőleges.
 
-A kezdőállapot jelenleg a kódban van megadva. A fájlból történő pályabetöltés,
-a játékállás mentése és visszatöltése, az adatbázisos eredménytábla, valamint
-a felső és alsó kijáratok kezelése még nem része a megvalósításnak.
+A pályafájl tartalmazza a tábla méretét, a kezdő játékost, a járműveket
+és a kijáratokat. Például a 9. pálya formátuma:
+
+```text
+BOARD 6 8
+TURN HUMAN
+VEHICLE A 2 V 3 2 true
+VEHICLE B 2 V 0 5 true
+VEHICLE C 2 H 1 1 false
+VEHICLE D 2 H 4 5 false
+EXIT A 2 TOP
+EXIT B 5 BOTTOM
+```
+
+A `BOARD` sorban a sorok és az oszlopok száma szerepel. A `VEHICLE` sorban
+sorrendben az azonosító, a hossz, a tájolás (`H` vagy `V`), a kezdősor, a
+kezdőoszlop és a céljárműjelző szerepel. Az indexek 0-tól indulnak.
+A `LEFT` és `RIGHT` kijárat koordinátája a sor, a `TOP` és `BOTTOM`
+kijáraté az oszlop. Mindkét céljármű a saját tájolásának megfelelő
+kijáratot használja. A `save <név>` parancs ugyanezt a formátumot használja,
+és a kezdőmenüben a 0 választásával lehet mentést betölteni.
